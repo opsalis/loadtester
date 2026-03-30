@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LoadTester — Global Load Testing. Pay per test.</title>
+  <meta name="description" content="Load test your API or website from 50 cities simultaneously. Instant results. Pay per test, not per month." />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0c10;
+      --surface: #12151c;
+      --border: #1e2330;
+      --accent: #4f8ef7;
+      --accent-dim: #2d5bbf;
+      --text: #e8ecf4;
+      --muted: #7a8398;
+      --green: #3ecf8e;
+      --red: #f87171;
+      --yellow: #fbbf24;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      line-height: 1.6;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Nav ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.1rem 2rem;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      z-index: 100;
+    }
+    .logo { font-weight: 700; font-size: 1.15rem; letter-spacing: -0.02em; }
+    .logo span { color: var(--accent); }
+    nav ul { list-style: none; display: flex; gap: 2rem; }
+    nav ul li a { color: var(--muted); font-size: 0.9rem; }
+    nav ul li a:hover { color: var(--text); text-decoration: none; }
+    .nav-cta {
+      background: var(--accent);
+      color: #fff !important;
+      padding: 0.45rem 1.1rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .nav-cta:hover { background: var(--accent-dim); text-decoration: none !important; }
+
+    /* ── Hero ── */
+    .hero {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 6rem 2rem 4rem;
+      text-align: center;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(79,142,247,0.12);
+      color: var(--accent);
+      border: 1px solid rgba(79,142,247,0.25);
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 0.3rem 0.9rem;
+      margin-bottom: 1.5rem;
+    }
+    h1 {
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.15;
+      margin-bottom: 1.2rem;
+    }
+    h1 em { font-style: normal; color: var(--accent); }
+    .hero-sub {
+      font-size: 1.15rem;
+      color: var(--muted);
+      max-width: 560px;
+      margin: 0 auto 2.5rem;
+    }
+    .hero-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      padding: 0.75rem 2rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1rem;
+      border: none;
+      cursor: pointer;
+      display: inline-block;
+    }
+    .btn-primary:hover { background: var(--accent-dim); text-decoration: none; }
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      padding: 0.75rem 2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1rem;
+      border: 1px solid var(--border);
+      display: inline-block;
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      display: flex;
+      justify-content: center;
+      gap: 3rem;
+      flex-wrap: wrap;
+      padding: 2.5rem 2rem;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      margin: 0 2rem;
+    }
+    .stat { text-align: center; }
+    .stat-num { font-size: 1.8rem; font-weight: 800; color: var(--text); letter-spacing: -0.03em; }
+    .stat-label { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.2rem; }
+
+    /* ── Sections ── */
+    section { max-width: 900px; margin: 0 auto; padding: 5rem 2rem; }
+    h2 { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 1rem; }
+    h2 .muted { color: var(--muted); font-weight: 400; }
+    .section-sub { color: var(--muted); font-size: 1rem; max-width: 580px; margin-bottom: 3rem; }
+
+    /* ── Feature grid ── */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.2rem;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem;
+    }
+    .feature-icon { font-size: 1.5rem; margin-bottom: 0.7rem; }
+    .feature-title { font-weight: 700; margin-bottom: 0.4rem; }
+    .feature-desc { color: var(--muted); font-size: 0.9rem; line-height: 1.5; }
+
+    /* ── Verification ── */
+    .verify-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2.5rem;
+    }
+    .verify-box h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.8rem; }
+    .verify-box p { color: var(--muted); font-size: 0.95rem; margin-bottom: 1.2rem; }
+    .steps { list-style: none; counter-reset: steps; display: flex; flex-direction: column; gap: 1rem; }
+    .steps li {
+      counter-increment: steps;
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      font-size: 0.95rem;
+    }
+    .steps li::before {
+      content: counter(steps);
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.8rem;
+      width: 1.6rem;
+      height: 1.6rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+    code {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.85rem;
+      background: rgba(255,255,255,0.07);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      color: var(--accent);
+    }
+
+    /* ── Pricing ── */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 2.5rem;
+    }
+    .price-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.8rem;
+    }
+    .price-card.featured {
+      border-color: var(--accent);
+      background: rgba(79,142,247,0.06);
+    }
+    .price-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem; }
+    .price-amount { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.04em; margin-bottom: 0.2rem; }
+    .price-period { font-size: 0.85rem; color: var(--muted); margin-bottom: 1rem; }
+    .price-features { list-style: none; font-size: 0.9rem; display: flex; flex-direction: column; gap: 0.5rem; }
+    .price-features li::before { content: "✓  "; color: var(--green); font-weight: 700; }
+
+    /* ── Comparison ── */
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+    .comparison-table th, .comparison-table td {
+      padding: 0.9rem 1rem;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+    .comparison-table th {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+    .comparison-table tr:last-child td { border-bottom: none; }
+    .yes { color: var(--green); font-weight: 700; }
+    .no  { color: var(--red); }
+    .col-us { font-weight: 700; }
+
+    /* ── How it works ── */
+    .flow {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .flow-step {
+      display: flex;
+      gap: 1.5rem;
+      position: relative;
+      padding-bottom: 2.5rem;
+    }
+    .flow-step:last-child { padding-bottom: 0; }
+    .flow-num {
+      width: 2.5rem;
+      height: 2.5rem;
+      background: var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+    }
+    .flow-step::after {
+      content: '';
+      position: absolute;
+      left: 1.2rem;
+      top: 2.5rem;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+    .flow-step:last-child::after { display: none; }
+    .flow-content h4 { font-weight: 700; margin-bottom: 0.3rem; }
+    .flow-content p { color: var(--muted); font-size: 0.95rem; }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2.5rem 2rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    footer a { color: var(--muted); }
+
+    @media (max-width: 600px) {
+      .stats-bar { gap: 1.5rem; }
+      h1 { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Load<span>Tester</span></div>
+  <ul>
+    <li><a href="#how-it-works">How it works</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#verify">Verification</a></li>
+    <li><a href="#docs" class="nav-cta">Get started</a></li>
+  </ul>
+</nav>
+
+<!-- ── Hero ── -->
+<section class="hero">
+  <div class="badge">Distributed Load Testing</div>
+  <h1>Load test from <em>50 cities</em>.<br>Pay per test, not per month.</h1>
+  <p class="hero-sub">
+    Simulate thousands of real users hitting your API from New York, London, Tokyo, and 47 more locations — simultaneously. Get p50/p95/p99 latency breakdowns in seconds.
+  </p>
+  <div class="hero-actions">
+    <a href="#docs" class="btn-primary">Run your first test</a>
+    <a href="#how-it-works" class="btn-secondary">See how it works</a>
+  </div>
+</section>
+
+<!-- ── Stats ── -->
+<div class="stats-bar">
+  <div class="stat">
+    <div class="stat-num">50+</div>
+    <div class="stat-label">Global locations</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">10,000</div>
+    <div class="stat-label">Max virtual users</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">1s</div>
+    <div class="stat-label">Metric granularity</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">$1</div>
+    <div class="stat-label">Starting price per test</div>
+  </div>
+</div>
+
+<!-- ── Features ── -->
+<section id="features">
+  <h2>Everything you need. <span class="muted">Nothing you don't.</span></h2>
+  <p class="section-sub">No agents to install. No subscriptions. POST to the API and get results.</p>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="feature-icon">&#127758;</div>
+      <div class="feature-title">Multi-region traffic</div>
+      <div class="feature-desc">Workers run in cities across 6 continents. Measure real-world latency from where your users actually are.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">&#128200;</div>
+      <div class="feature-title">p50 / p95 / p99 latency</div>
+      <div class="feature-desc">Every second of your test produces a latency histogram. See exactly where your tail latency spikes.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">&#9889;</div>
+      <div class="feature-title">Keep-alive connections</div>
+      <div class="feature-desc">Workers use HTTP keep-alive to simulate real browser and API client behavior — not naive single-shot requests.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">&#128274;</div>
+      <div class="feature-title">Ownership verification</div>
+      <div class="feature-desc">Like Let's Encrypt for load tests. We verify you own the target before sending a single request. No DDoS-for-hire.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">&#128196;</div>
+      <div class="feature-title">PDF-ready reports</div>
+      <div class="feature-desc">Every test produces a structured JSON report you can render as a PDF and share with your team or clients.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">&#128640;</div>
+      <div class="feature-title">Simple REST API</div>
+      <div class="feature-desc">One <code>POST /v1/tests</code> to start. One <code>GET /v1/tests/:id</code> to poll. Works from curl, CI pipelines, or any language.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── How it works ── -->
+<section id="how-it-works">
+  <h2>How it works</h2>
+  <p class="section-sub">From zero to running test in under two minutes.</p>
+  <div class="flow">
+    <div class="flow-step">
+      <div class="flow-num">1</div>
+      <div class="flow-content">
+        <h4>Prove you own the target</h4>
+        <p>Upload a small verification file to your server (same idea as Let's Encrypt domain validation). This stops anyone from using LoadTester as a DDoS weapon against targets they don't own.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">2</div>
+      <div class="flow-content">
+        <h4>Send a POST request</h4>
+        <p>Call <code>POST /v1/tests</code> with your target URL, number of virtual users, duration, and the locations you want traffic from. That's it.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">3</div>
+      <div class="flow-content">
+        <h4>Workers spin up worldwide</h4>
+        <p>The master assigns the test to workers in your chosen locations. Each worker ramps up VUs gradually to simulate real traffic patterns.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">4</div>
+      <div class="flow-content">
+        <h4>Stream live metrics, then get the report</h4>
+        <p>Workers report RPS, latency percentiles, and error counts every second. When the test finishes, <code>GET /v1/tests/:id/report</code> returns the full structured report.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Verification ── -->
+<section id="verify">
+  <h2>Ownership verification</h2>
+  <p class="section-sub">We verify you control the target domain before sending any load. This is non-negotiable — it protects the internet from abuse.</p>
+  <div class="verify-box">
+    <h3>How to verify your domain</h3>
+    <p>Create a static text file at a well-known URL on your server. We fetch it before the test starts. If it returns HTTP 200, you're verified.</p>
+    <ol class="steps">
+      <li>
+        <div>Call <code>POST /v1/prepare-verify</code> with your <code>target_url</code> to get a unique token, e.g. <code>lt-9f3c2a1b</code></div>
+      </li>
+      <li>
+        <div>Create the file <code>/.well-known/verify-loadtest-lt-9f3c2a1b.txt</code> on your server — content can be anything, just needs to return 200.</div>
+      </li>
+      <li>
+        <div>Pass <code>verification_file_url</code> in your <code>POST /v1/tests</code> request. We fetch it, confirm 200, then start the test.</div>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- ── Pricing ── -->
+<section id="pricing">
+  <h2>Simple, per-test pricing</h2>
+  <p class="section-sub">k6 Cloud starts at $600/month. You pay per test here — only when you actually test.</p>
+
+  <div class="pricing-grid">
+    <div class="price-card">
+      <div class="price-label">Small</div>
+      <div class="price-amount">$1</div>
+      <div class="price-period">per test</div>
+      <ul class="price-features">
+        <li>Up to 100 VUs</li>
+        <li>Up to 5 minutes</li>
+        <li>1 location</li>
+        <li>Full metrics report</li>
+      </ul>
+    </div>
+    <div class="price-card featured">
+      <div class="price-label">Standard</div>
+      <div class="price-amount">$3</div>
+      <div class="price-period">per test</div>
+      <ul class="price-features">
+        <li>Up to 1,000 VUs</li>
+        <li>Up to 15 minutes</li>
+        <li>Up to 5 locations</li>
+        <li>Full metrics report</li>
+        <li>PDF export</li>
+      </ul>
+    </div>
+    <div class="price-card">
+      <div class="price-label">Large</div>
+      <div class="price-amount">$5</div>
+      <div class="price-period">per test</div>
+      <ul class="price-features">
+        <li>Up to 10,000 VUs</li>
+        <li>Up to 60 minutes</li>
+        <li>Up to 50 locations</li>
+        <li>Full metrics report</li>
+        <li>PDF export</li>
+        <li>Dedicated workers</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 style="margin-bottom:1rem;font-size:1.1rem;">How we compare to $600/month subscriptions</h3>
+  <table class="comparison-table">
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th class="col-us">LoadTester</th>
+        <th>k6 Cloud</th>
+        <th>Loader.io</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Pay per test (no subscription)</td>
+        <td class="yes col-us">Yes</td>
+        <td class="no">No — $600/mo</td>
+        <td class="no">No — $99/mo</td>
+      </tr>
+      <tr>
+        <td>p95 / p99 latency breakdown</td>
+        <td class="yes col-us">Yes</td>
+        <td class="yes">Yes</td>
+        <td class="no">No</td>
+      </tr>
+      <tr>
+        <td>Multi-region from 50+ cities</td>
+        <td class="yes col-us">Yes</td>
+        <td class="yes">Yes</td>
+        <td class="no">Limited</td>
+      </tr>
+      <tr>
+        <td>Anti-DDoS ownership check</td>
+        <td class="yes col-us">Yes (built-in)</td>
+        <td class="no">No</td>
+        <td class="no">No</td>
+      </tr>
+      <tr>
+        <td>REST API for CI/CD integration</td>
+        <td class="yes col-us">Yes</td>
+        <td class="yes">Yes</td>
+        <td class="yes">Yes</td>
+      </tr>
+      <tr>
+        <td>Entry price</td>
+        <td class="yes col-us">$1 / test</td>
+        <td class="no">$600 / month</td>
+        <td class="no">$99 / month</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ── API quick start ── -->
+<section id="docs">
+  <h2>Quick start</h2>
+  <p class="section-sub">Two API calls. No SDK required.</p>
+  <div class="verify-box">
+    <h3>Run a test with curl</h3>
+    <p>After placing your verification file, start a test:</p>
+    <ol class="steps">
+      <li>
+        <div>
+          <code>curl -X POST https://api.loadtester.io/v1/tests \</code><br>
+          <code>&nbsp;&nbsp;-H "Content-Type: application/json" \</code><br>
+          <code>&nbsp;&nbsp;-d '{"target_url":"https://api.example.com","virtual_users":500,"duration_seconds":60,"verification_file_url":"https://api.example.com/.well-known/verify-loadtest-YOUR-TOKEN.txt"}'</code>
+        </div>
+      </li>
+      <li>
+        <div>
+          Poll for results:<br>
+          <code>curl https://api.loadtester.io/v1/tests/YOUR-TEST-ID</code>
+        </div>
+      </li>
+      <li>
+        <div>
+          Get the full report:<br>
+          <code>curl https://api.loadtester.io/v1/tests/YOUR-TEST-ID/report</code>
+        </div>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<footer>
+  <p>LoadTester &mdash; Global distributed load testing. Pay per test.</p>
+  <p style="margin-top:0.5rem;"><a href="#pricing">Pricing</a> &middot; <a href="#verify">Verification</a> &middot; <a href="#docs">API docs</a></p>
+</footer>
+
+</body>
+</html>

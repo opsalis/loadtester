@@ -1,0 +1,77 @@
+version: '3.9'
+
+services:
+
+  master:
+    build:
+      context: ./master
+      dockerfile: Dockerfile
+    container_name: loadtester-master
+    ports:
+      - "4002:4002"
+    volumes:
+      - master-data:/data
+    environment:
+      PORT: "4002"
+      DB_PATH: "/data/loadtester.db"
+    restart: unless-stopped
+    networks:
+      - loadtester-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4002/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  worker-1:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    container_name: loadtester-worker-1
+    depends_on:
+      master:
+        condition: service_healthy
+    environment:
+      MASTER_URL: "ws://master:4002/ws"
+      WORKER_LOCATION: "us-east"
+    restart: unless-stopped
+    networks:
+      - loadtester-net
+
+  worker-2:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    container_name: loadtester-worker-2
+    depends_on:
+      master:
+        condition: service_healthy
+    environment:
+      MASTER_URL: "ws://master:4002/ws"
+      WORKER_LOCATION: "eu-west"
+    restart: unless-stopped
+    networks:
+      - loadtester-net
+
+  worker-3:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    container_name: loadtester-worker-3
+    depends_on:
+      master:
+        condition: service_healthy
+    environment:
+      MASTER_URL: "ws://master:4002/ws"
+      WORKER_LOCATION: "ap-southeast"
+    restart: unless-stopped
+    networks:
+      - loadtester-net
+
+volumes:
+  master-data:
+
+networks:
+  loadtester-net:
+    driver: bridge

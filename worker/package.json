@@ -1,0 +1,16 @@
+{
+  "name": "loadtester-worker",
+  "version": "0.1.0",
+  "description": "LoadTester worker node",
+  "main": "worker.js",
+  "scripts": {
+    "start": "node worker.js",
+    "dev": "node --watch worker.js"
+  },
+  "dependencies": {
+    "ws": "^8.16.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
