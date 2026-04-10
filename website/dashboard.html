@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Test Results — LoadTester</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg: #fff; --fg: #111827; --muted: #6b7280; --accent: #7c3aed; --border: #e5e7eb; --card-bg: #f9fafb; --green: #10b981; --red: #ef4444; --radius: 12px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: var(--fg); background: var(--bg); line-height: 1.6; }
+    a { color: var(--accent); text-decoration: none; }
+    .container { max-width: 1000px; margin: 0 auto; padding: 2rem; }
+    h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+    .subtitle { color: var(--muted); margin-bottom: 2rem; }
+
+    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .metric-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; text-align: center; }
+    .metric-card .value { font-size: 2rem; font-weight: 800; color: var(--accent); }
+    .metric-card .label { font-size: 0.85rem; color: var(--muted); margin-top: 0.25rem; }
+
+    .test-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1rem; }
+    .test-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+    .test-url { font-weight: 600; font-size: 1.05rem; word-break: break-all; }
+    .status-badge { padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+    .status-badge.running { background: #dbeafe; color: #1d4ed8; }
+    .status-badge.completed { background: #d1fae5; color: #065f46; }
+    .status-badge.pending { background: #f3f4f6; color: #6b7280; }
+    .status-badge.cancelled { background: #fee2e2; color: #991b1b; }
+    .test-meta { display: flex; gap: 2rem; color: var(--muted); font-size: 0.85rem; flex-wrap: wrap; }
+
+    .region-results { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem; }
+    .region-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
+    .region-card h4 { font-size: 0.95rem; margin-bottom: 0.5rem; }
+    .region-card p { font-size: 0.85rem; color: var(--muted); }
+
+    .empty-state { text-align: center; padding: 4rem 2rem; color: var(--muted); }
+    footer { text-align: center; padding: 2rem; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); margin-top: 2rem; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Load Test Results</h1>
+  <p class="subtitle">Real-time metrics from distributed load tests</p>
+
+  <div id="metrics-overview" class="metrics-grid" style="display:none;">
+    <div class="metric-card"><div class="value" id="m-rps">0</div><div class="label">Avg RPS</div></div>
+    <div class="metric-card"><div class="value" id="m-p50">0ms</div><div class="label">P50 Latency</div></div>
+    <div class="metric-card"><div class="value" id="m-p95">0ms</div><div class="label">P95 Latency</div></div>
+    <div class="metric-card"><div class="value" id="m-p99">0ms</div><div class="label">P99 Latency</div></div>
+    <div class="metric-card"><div class="value" id="m-errors">0%</div><div class="label">Error Rate</div></div>
+    <div class="metric-card"><div class="value" id="m-total">0</div><div class="label">Total Requests</div></div>
+  </div>
+
+  <div id="tests-list">
+    <div class="empty-state">
+      <p>Loading tests...</p>
+      <p style="margin-top:1rem; font-size:0.9rem;">Configure API URL in localStorage: <code>loadtester_api</code></p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>Powered by <a href="index.html">LoadTester</a> — Distributed load testing from 4 continents</p>
+</footer>
+
+<script>
+  const API_BASE = localStorage.getItem('loadtester_api') || '';
+  const TEST_ID = new URLSearchParams(window.location.search).get('id');
+
+  async function fetchData() {
+    if (!API_BASE) return;
+    try {
+      if (TEST_ID) {
+        const res = await fetch(`${API_BASE}/v1/tests/${TEST_ID}/report`, { headers: { 'X-API-Key': localStorage.getItem('loadtester_key') || '' } });
+        const data = await res.json();
+        renderReport(data);
+      } else {
+        const res = await fetch(`${API_BASE}/v1/tests`, { headers: { 'X-API-Key': localStorage.getItem('loadtester_key') || '' } });
+        const data = await res.json();
+        renderTests(data.tests || []);
+      }
+    } catch (err) { console.error(err); }
+  }
+
+  function renderReport(data) {
+    if (!data.report) return;
+    document.getElementById('metrics-overview').style.display = 'grid';
+    document.getElementById('m-rps').textContent = Math.round(data.report.avg_rps || 0);
+    document.getElementById('m-p50').textContent = (data.report.p50_latency || 0) + 'ms';
+    document.getElementById('m-p95').textContent = (data.report.p95_latency || 0) + 'ms';
+    document.getElementById('m-p99').textContent = (data.report.p99_latency || 0) + 'ms';
+    document.getElementById('m-errors').textContent = (data.report.error_rate || 0) + '%';
+    document.getElementById('m-total').textContent = (data.report.total_requests || 0).toLocaleString();
+
+    document.getElementById('tests-list').innerHTML = `
+      <div class="test-card">
+        <div class="test-header">
+          <span class="test-url">${data.test.target_url}</span>
+          <span class="status-badge ${data.test.status}">${data.test.status.toUpperCase()}</span>
+        </div>
+        <div class="test-meta">
+          <span>RPS: ${data.test.rps}</span>
+          <span>Duration: ${data.test.duration_seconds}s</span>
+          <span>Regions: ${data.test.regions}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderTests(tests) {
+    const container = document.getElementById('tests-list');
+    if (tests.length === 0) {
+      container.innerHTML = '<div class="empty-state"><p>No tests yet.</p></div>';
+      return;
+    }
+    container.innerHTML = tests.map(t => `
+      <a href="?id=${t.id}" style="text-decoration:none; color:inherit;">
+        <div class="test-card">
+          <div class="test-header">
+            <span class="test-url">${t.target_url}</span>
+            <span class="status-badge ${t.status}">${t.status.toUpperCase()}</span>
+          </div>
+          <div class="test-meta">
+            <span>RPS: ${t.rps}</span>
+            <span>Duration: ${t.duration_seconds}s</span>
+            <span>Created: ${t.created_at}</span>
+          </div>
+        </div>
+      </a>
+    `).join('');
+  }
+
+  fetchData();
+  setInterval(fetchData, 5000);
+</script>
+
+</body>
+</html>

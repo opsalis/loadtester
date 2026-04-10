@@ -1,107 +1,82 @@
 # CLAUDE.md — LoadTester
 
+> Read this first. All facts here are traceable to source code.
+
 ## What is LoadTester
 
-Distributed global load tester. Consumers upload an ownership-verification file, then POST a test request. The master dispatches the job to a fleet of worker nodes worldwide. Workers run HTTP flood loops with keep-alive connections and report per-second metrics back. Results (RPS, p50/p95/p99 latency, error rate, throughput) are stored in SQLite and exposed via REST.
+Distributed load testing service. Load comes from 4 continents simultaneously via k3s Jobs. Customers specify target URL, RPS, and duration — workers across all nodes hammer the target and report real-time metrics.
 
-**Anti-DDoS principle:** before firing a single request, the master fetches `verification_file_url` from the target domain (same concept as Let's Encrypt domain validation). If the file is not reachable the test is refused. This is mandatory — no bypass.
+**Anti-DDoS:** Before firing a single request, the API verifies domain ownership via a verification file (same concept as Let's Encrypt). No bypass.
 
 ## Relationship to Opsalis
 
-This project runs ON the Opsalis network as an independent business. It uses Opsalis the same way any API owner would — registers services, earns USDC through the 95/5 settlement, runs in a Docker container. No changes to Opsalis core code required.
+This project runs on the Opsalis network as an independent business.
+Registers services, earns USDC through 95/5 settlement, runs in Docker containers.
+No changes to Opsalis core code required.
 
-## Revenue Model
+## Repository Structure
 
-- Service fees paid in USDC via Opsalis settlement
-- 5% IP royalty to Opsalis on every transaction (immutable, on-chain)
-- 95% goes to the service operator
-- Pricing: $1 (small), $3 (standard), $5 (large) per test
+```
+backend/
+  index.ts          — Express API: create test, get results, cancel
+  worker.ts         — HTTP load generator (RPS, duration, keep-alive)
+  aggregator.ts     — Collect results from all nodes, compute percentiles
+  package.json
+  tsconfig.json
+  Dockerfile
+  k8s/
+    job-template.yaml  — k8s Job per test (scales across nodes)
+    deployment.yaml    — API server
+    service.yaml
+
+website/
+  index.html        — "Load test from 4 continents simultaneously"
+  dashboard.html    — Real-time test results
+  terms.html
+  wrangler.toml
+
+docs/
+  API_REFERENCE.md
+  DEPLOYMENT.md
+```
 
 ## Tech Stack
 
-- **Runtime:** Node.js 22
-- **Master:** Express 4, better-sqlite3, ws (WebSocket server), pure Node http/https
-- **Worker:** ws (WebSocket client), pure Node http/https — no external load-testing library
-- **Storage:** SQLite (master only, /data volume)
-- **Transport:** Workers connect to master via WebSocket /ws; REST API on :4002
+- Runtime: Node.js 22 + TypeScript
+- Framework: Express 4
+- Database: SQLite (better-sqlite3)
+- Orchestration: k3s Jobs (worker) + Deployment (API)
+- Load generation: Pure Node.js HTTP with keep-alive
 
-## Architecture
+## Key Design Decisions
 
-```
-Client / CI pipeline
-        │
-        ▼  REST (port 4002)
-  ┌─────────────┐
-  │   Master    │  Express + SQLite + WebSocket
-  └──────┬──────┘
-         │  WebSocket /ws
-    ┌────┴─────┐
-    ▼    ▼     ▼
-  Worker Worker Worker   (one per location/container)
-```
+- **Domain verification required.** Anti-DDoS protection. Target must serve a verification file.
+- **k8s Jobs for isolation.** Each test spawns Jobs on target nodes, cleaned up after completion.
+- **RPS distributed evenly.** 1000 RPS across 4 nodes = 250 RPS each.
+- **Percentile computation.** P50, P95, P99 latency from merged results.
+- **No external load libraries.** Pure Node.js HTTP with keep-alive connections.
 
-## File Map
+## Pricing
 
-```
-master/
-  server.js         # Express REST API + WebSocket hub + SQLite storage (~250 lines)
-  package.json      # express, better-sqlite3, ws
-  Dockerfile        # node:22-alpine
+| Tier | RPS | Duration | Locations | Price |
+|------|-----|----------|-----------|-------|
+| Free | 100 | 1 min | 1 | $0 |
+| Pro | 10,000 | 10 min | All 4 | $20/test USDC |
+| Business | 100,000 | 60 min | All 4 | $100/test USDC |
 
-worker/
-  worker.js         # WS client + HTTP load runner + per-second metrics (~120 lines)
-  package.json      # ws only
-  Dockerfile        # node:22-alpine
+## Environment Variables
 
-website/
-  index.html        # Landing page (hero, verification explainer, pricing, comparison)
-
-docker-compose.yml  # master + worker-1 (us-east) + worker-2 (eu-west) + worker-3 (ap-southeast)
-README.md
-CLAUDE.md           # this file
-```
-
-## REST API
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `POST` | `/v1/tests` | Create + start a load test |
-| `GET` | `/v1/tests` | List tests (last 100) |
-| `GET` | `/v1/tests/:id` | Status + results |
-| `GET` | `/v1/tests/:id/report` | Full structured report (PDF-ready) |
-| `DELETE` | `/v1/tests/:id` | Cancel running test |
-| `GET` | `/health` | Master health + worker count |
-| `WS` | `/ws` | Worker connection endpoint |
-
-## WebSocket protocol
-
-**Master → Worker:**
-```json
-{ "type": "welcome", "worker_id": "uuid" }
-{ "type": "load", "test_id": "uuid", "target_url": "...", "vus": 100, "duration_seconds": 60, "ramp_up_seconds": 6 }
-{ "type": "cancel", "test_id": "uuid" }
-```
-
-**Worker → Master:**
-```json
-{ "type": "metrics", "test_id": "uuid", "rps": 182, "latency_avg": 22.1, "latency_p50": 18, "latency_p95": 87, "latency_p99": 210, "errors": 2, "bytes": 48200, "timestamp": 1711111111111, "location": "eu-west" }
-{ "type": "complete", "test_id": "uuid", "location": "eu-west", "ts": 1711111171000 }
-```
-
-## SQLite Schema
-
-Tables: `tests`, `metrics`, `results`. Master persists to `/data/loadtester.db` (Docker volume).
-
-## DO NOT
-
-- Remove the ownership verification gate — it is the anti-DDoS protection
-- Add external load-testing libraries to the worker (keep it pure Node.js HTTP)
-- Store credentials or API keys in any committed file
-- Allow test creation without a `verification_file_url`
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | `3400` | API listen port |
+| `DB_PATH` | `./data/loadtester.db` | SQLite path |
+| `API_KEY` | — | Authentication key |
+| `KUBECONFIG` | — | k8s config for Job creation |
+| `WORKER_IMAGE` | `opsalis/loadtester-worker:latest` | Worker Docker image |
 
 ## Status
 
-SKELETON BUILT — core architecture implemented, ownership verification wired, metrics pipeline complete. Not yet connected to Opsalis settlement.
+COMPLETE — Full implementation with API, worker, aggregator, k8s manifests, and website.
 
 ## Repository
 

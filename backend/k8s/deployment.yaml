@@ -1,0 +1,111 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loadtester-api
+  namespace: loadtester
+  labels:
+    app: loadtester
+    component: api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loadtester
+      component: api
+  template:
+    metadata:
+      labels:
+        app: loadtester
+        component: api
+    spec:
+      serviceAccountName: loadtester-api
+      containers:
+      - name: api
+        image: opsalis/loadtester-api:latest
+        ports:
+        - containerPort: 3400
+          name: http
+        env:
+        - name: PORT
+          value: "3400"
+        - name: DB_PATH
+          value: "/app/data/loadtester.db"
+        - name: WORKER_IMAGE
+          value: "opsalis/loadtester-worker:latest"
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: loadtester-secrets
+              key: api-key
+              optional: true
+        volumeMounts:
+        - name: data
+          mountPath: /app/data
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3400
+          initialDelaySeconds: 5
+          periodSeconds: 15
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3400
+          initialDelaySeconds: 3
+          periodSeconds: 10
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: loadtester-data
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: loadtester-data
+  namespace: loadtester
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+# ServiceAccount with permission to create Jobs
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: loadtester-api
+  namespace: loadtester
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: loadtester-job-creator
+  namespace: loadtester
+rules:
+- apiGroups: ["batch"]
+  resources: ["jobs"]
+  verbs: ["create", "delete", "get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["pods", "pods/log"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: loadtester-api-binding
+  namespace: loadtester
+subjects:
+- kind: ServiceAccount
+  name: loadtester-api
+roleRef:
+  kind: Role
+  name: loadtester-job-creator
+  apiGroup: rbac.authorization.k8s.io

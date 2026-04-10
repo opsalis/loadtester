@@ -1,0 +1,11 @@
+name = "loadtester-website"
+compatibility_date = "2024-12-01"
+main = "index.html"
+
+[site]
+bucket = "."
+
+[env.production]
+routes = [
+  { pattern = "loadtester.example.com", custom_domain = true }
+]

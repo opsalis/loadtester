@@ -1,148 +1,73 @@
-# LoadTester
+# LoadTester — Distributed Load Testing from 4 Continents
 
-Distributed global load tester. Website → Master server → Worker fleet.
+Load test your APIs and websites with real-world traffic from Canada, Singapore, Frankfurt, and the UK simultaneously.
+
+## Features
+
+- **Multi-continent load generation** — Traffic from 4 continents simultaneously
+- **Pay per test** — No monthly subscriptions
+- **Domain verification** — Anti-DDoS protection built-in
+- **Real-time metrics** — P50, P95, P99 latency, error rate, throughput
+- **Configurable patterns** — Ramp-up, steady state, spike testing
+- **API-first** — Integrate into CI/CD pipelines
+
+## Quick Start
+
+```bash
+# 1. Create a verification file on your domain
+# Serve: https://your-domain.com/.well-known/loadtester-verify/{test-id}
+
+# 2. Create a load test
+curl -X POST http://localhost:3400/v1/tests \
+  -H 'Content-Type: application/json' \
+  -H 'X-API-Key: your-key' \
+  -d '{
+    "target_url": "https://your-domain.com/api/health",
+    "rps": 1000,
+    "duration_seconds": 300,
+    "regions": ["americas", "europe", "asia"]
+  }'
+
+# 3. Check results
+curl http://localhost:3400/v1/tests/{test-id} \
+  -H 'X-API-Key: your-key'
+
+# 4. Get full report
+curl http://localhost:3400/v1/tests/{test-id}/report \
+  -H 'X-API-Key: your-key'
+```
 
 ## Architecture
 
 ```
-Client / CI pipeline
-        │
-        ▼  REST (port 4002)
-  ┌─────────────┐
-  │   Master    │  Express + SQLite + WebSocket
-  └──────┬──────┘
-         │  WebSocket /ws
-    ┌────┴─────┐
-    ▼    ▼     ▼
-  Worker Worker Worker   (one per location)
+API Server (Deployment)
+┌────────────────────┐
+│ Express + SQLite    │  Creates k8s Jobs per test
+│ REST API :3400      │
+└────────┬───────────┘
+    k8s Jobs spawned on each region
+┌────────┼────────┬──────────┐
+│ CA     │ DE     │ UK       │ SG
+│ 250rps │ 250rps │ 250rps   │ 250rps
+└────────┴────────┴──────────┘
+         → Target URL
 ```
 
-- **Master** accepts test requests, verifies ownership, dispatches work via WebSocket, aggregates metrics, stores results in SQLite.
-- **Workers** receive load jobs, run HTTP floods with keep-alive connections, report per-second metrics back to master.
-
-## Anti-DDoS ownership verification
-
-Before any test starts, the master fetches `verification_file_url` from the target domain. If the file is not reachable the test is refused. This prevents LoadTester from being used as a DDoS tool against third-party targets.
-
-## Quick start
+## Deployment
 
 ```bash
-# Start master + 3 workers
-docker compose up --build
-
-# Create a test
-curl -X POST http://localhost:4002/v1/tests \
-  -H "Content-Type: application/json" \
-  -d '{
-    "target_url": "https://api.example.com",
-    "virtual_users": 100,
-    "duration_seconds": 30,
-    "locations": ["us-east", "eu-west"],
-    "verification_file_url": "https://api.example.com/.well-known/verify-loadtest-TOKEN.txt"
-  }'
-
-# Check status
-curl http://localhost:4002/v1/tests/<id>
-
-# Get report
-curl http://localhost:4002/v1/tests/<id>/report
-
-# Cancel
-curl -X DELETE http://localhost:4002/v1/tests/<id>
+kubectl apply -f backend/k8s/service.yaml
+kubectl apply -f backend/k8s/deployment.yaml
 ```
 
-## API reference
+## Pricing
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `POST` | `/v1/tests` | Create and start a load test |
-| `GET` | `/v1/tests` | List all tests |
-| `GET` | `/v1/tests/:id` | Get test status and results |
-| `GET` | `/v1/tests/:id/report` | Full PDF-ready JSON report |
-| `DELETE` | `/v1/tests/:id` | Cancel a running test |
-| `GET` | `/health` | Master health check |
-| `WS` | `/ws` | Worker connection endpoint |
+| Tier | RPS | Duration | Locations | Price |
+|------|-----|----------|-----------|-------|
+| Free | 100 | 1 min | 1 | $0 |
+| Pro | 10,000 | 10 min | All 4 | $20/test USDC |
+| Business | 100,000 | 60 min | All 4 | $100/test USDC |
 
-### POST /v1/tests — request body
+## License
 
-```json
-{
-  "target_url": "https://api.example.com",
-  "virtual_users": 500,
-  "duration_seconds": 60,
-  "locations": ["us-east", "eu-west", "ap-southeast"],
-  "verification_file_url": "https://api.example.com/.well-known/verify-loadtest-TOKEN.txt"
-}
-```
-
-### GET /v1/tests/:id — response
-
-```json
-{
-  "id": "uuid",
-  "status": "finished",
-  "target_url": "...",
-  "virtual_users": 500,
-  "duration_sec": 60,
-  "results": {
-    "total_requests": 28400,
-    "total_errors": 12,
-    "rps_avg": 473.3,
-    "rps_peak": 512.1,
-    "latency_p50": 18.4,
-    "latency_p95": 87.2,
-    "latency_p99": 210.5,
-    "throughput_mb": 142.8,
-    "worker_count": 3
-  }
-}
-```
-
-## Configuration
-
-### Master environment variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PORT` | `4002` | HTTP listen port |
-| `DB_PATH` | `/data/loadtester.db` | SQLite database path |
-
-### Worker environment variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `MASTER_URL` | `ws://master:4002/ws` | WebSocket URL of the master |
-| `WORKER_LOCATION` | `default` | Location label reported in metrics |
-
-## Scaling workers
-
-Add more workers by duplicating a worker service in `docker-compose.yml` with a unique `WORKER_LOCATION`. Workers auto-reconnect on disconnect. Master distributes load across all connected workers.
-
-## Development
-
-```bash
-# Master
-cd master && npm install && node server.js
-
-# Worker (in another terminal)
-cd worker && npm install && MASTER_URL=ws://localhost:4002/ws node worker.js
-```
-
-## File structure
-
-```
-LoadTester/
-  master/
-    server.js         # Express + WebSocket master (250 lines)
-    package.json
-    Dockerfile
-  worker/
-    worker.js         # Load runner + WS client (120 lines)
-    package.json
-    Dockerfile
-  website/
-    index.html        # Landing page
-  docker-compose.yml  # master + 3 workers
-  CLAUDE.md
-  README.md
-```
+Proprietary — Mesa Operations LLC

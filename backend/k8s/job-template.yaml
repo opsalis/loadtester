@@ -1,0 +1,51 @@
+# Template for load test worker Jobs
+# The API server uses this as a template, substituting variables at runtime
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: loadtest-${TEST_ID}-${REGION}
+  namespace: loadtester
+  labels:
+    app: loadtester
+    component: worker
+    test-id: "${TEST_ID}"
+    region: "${REGION}"
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app: loadtester
+        component: worker
+        test-id: "${TEST_ID}"
+    spec:
+      nodeSelector:
+        topology.kubernetes.io/region: "${REGION}"
+      containers:
+      - name: worker
+        image: opsalis/loadtester-worker:latest
+        command: ["node", "dist/worker.js"]
+        env:
+        - name: TARGET_URL
+          value: "${TARGET_URL}"
+        - name: RPS
+          value: "${RPS_PER_NODE}"
+        - name: DURATION
+          value: "${DURATION}"
+        - name: RAMP_UP
+          value: "${RAMP_UP}"
+        - name: REGION
+          value: "${REGION}"
+        - name: TEST_ID
+          value: "${TEST_ID}"
+        - name: API_URL
+          value: "http://loadtester-api.loadtester.svc.cluster.local:3400"
+        resources:
+          requests:
+            cpu: 500m
+            memory: 256Mi
+          limits:
+            cpu: 2000m
+            memory: 512Mi
+      restartPolicy: Never

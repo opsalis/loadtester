@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: loadtester
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loadtester-api
+  namespace: loadtester
+  labels:
+    app: loadtester
+    component: api
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3400
+    targetPort: 3400
+    protocol: TCP
+    name: http
+  selector:
+    app: loadtester
+    component: api
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: loadtester-ingress
+  namespace: loadtester
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  rules:
+  - host: api.loadtester.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: loadtester-api
+            port:
+              number: 3400
+  tls:
+  - hosts:
+    - api.loadtester.example.com
+    secretName: loadtester-tls
