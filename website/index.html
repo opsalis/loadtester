@@ -5,6 +5,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LoadTester — Distributed Load Testing from 4 Continents</title>
   <meta name="description" content="Load test your APIs with real-world traffic from Canada, Singapore, Frankfurt, and the UK simultaneously. Pay per test, not per month." />
+  <meta name="keywords" content="load testing, distributed load test, API load test, performance testing, stress testing, multi-region load test, pay per test, k6 alternative, load testing API">
+  <link rel="canonical" href="https://theloadtester.com/">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F680;</text></svg>">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://theloadtester.com/">
+  <meta property="og:title" content="LoadTester — Distributed Load Testing from 4 Continents">
+  <meta property="og:description" content="Load test your APIs with real-world traffic from 4 continents simultaneously. Pay per test, not per month.">
+  <meta property="og:image" content="https://theloadtester.com/og-image.png">
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="LoadTester — Distributed Load Testing from 4 Continents">
+  <meta name="twitter:description" content="Load test your APIs with real-world traffic from 4 continents simultaneously. Pay per test, not per month.">
+  <meta name="twitter:image" content="https://theloadtester.com/og-image.png">
+  <!-- JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "LoadTester",
+    "description": "Distributed load testing from 4 continents. Generate real-world traffic from Canada, Singapore, Frankfurt, and the UK simultaneously.",
+    "url": "https://theloadtester.com",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Any",
+    "offers": [
+      { "@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "USD", "description": "100 RPS, 1 minute, 1 location" },
+      { "@type": "Offer", "name": "Pro", "price": "20", "priceCurrency": "USD", "description": "10,000 RPS, 10 minutes, all 4 locations" },
+      { "@type": "Offer", "name": "Business", "price": "100", "priceCurrency": "USD", "description": "100,000 RPS, 60 minutes, all 4 locations" }
+    ]
+  }
+  </script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -272,8 +303,18 @@ curl https://api.loadtester.example.com/v1/tests/{id}/report \
 </section>
 
 <footer>
-  <p><a href="terms.html">Terms of Service</a> &middot; <a href="mailto:support@loadtester.example.com">Contact</a></p>
+  <p><a href="terms.html">Terms of Service</a> &middot; <a href="mailto:support@theloadtester.com">Contact</a></p>
   <p style="margin-top:0.5rem">Distributed load testing from 4 continents.</p>
+  <div style="margin-top:1rem;display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;font-size:0.8rem;">
+    <span style="color:var(--muted)">Also from us:</span>
+    <a href="https://sertone.net" style="color:var(--muted)">Sertone</a>
+    <a href="https://l2aas.net" style="color:var(--muted)">L2aaS</a>
+    <a href="https://chainrpc.net" style="color:var(--muted)">ChainRPC</a>
+    <a href="https://chainclone.net" style="color:var(--muted)">ChainClone</a>
+    <a href="https://pingdog.net" style="color:var(--muted)">PingDog</a>
+    <a href="https://swarmbrowser.net" style="color:var(--muted)">SwarmBrowser</a>
+  </div>
+  <p style="margin-top:0.5rem">&copy; 2026 LoadTester</p>
 </footer>
 
 </body>
