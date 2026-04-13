@@ -255,17 +255,17 @@ app.post('/api/record-start', (req: Request, res: Response) => {
 
 // GET /api/record-steps/:sessionId — poll for captured steps
 app.get('/api/record-steps/:sessionId', (req: Request, res: Response) => {
-  const session = recordings.get(req.params.sessionId);
+  const session = recordings.get(req.params.sessionId as string);
   if (!session) { res.status(404).json({ error: 'Recording session not found' }); return; }
   res.json({ steps: session.steps, count: session.steps.length });
 });
 
 // POST /api/record-stop/:sessionId — stop recording
 app.post('/api/record-stop/:sessionId', (req: Request, res: Response) => {
-  const session = recordings.get(req.params.sessionId);
+  const session = recordings.get(req.params.sessionId as string);
   if (!session) { res.status(404).json({ error: 'Recording session not found' }); return; }
   const steps = session.steps;
-  recordings.delete(req.params.sessionId);
+  recordings.delete(req.params.sessionId as string);
   res.json({ steps, count: steps.length });
 });
 
@@ -355,7 +355,7 @@ app.post('/api/scenario-test', (req: Request, res: Response) => {
 
 // GET /api/test/:id/stream — SSE stream of live metrics
 app.get('/api/test/:id/stream', (req: Request, res: Response) => {
-  const session = tests.get(req.params.id);
+  const session = tests.get(req.params.id as string);
   if (!session) {
     res.status(404).json({ error: 'Test session not found' });
     return;
@@ -396,7 +396,7 @@ app.get('/api/test/:id/stream', (req: Request, res: Response) => {
 
 // GET /api/test/:id/report — download PDF report
 app.get('/api/test/:id/report', (req: Request, res: Response) => {
-  const session = tests.get(req.params.id);
+  const session = tests.get(req.params.id as string);
   if (!session) {
     res.status(404).json({ error: 'Test session not found or already expired' });
     return;
