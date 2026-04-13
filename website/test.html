@@ -555,7 +555,8 @@ module.exports = async function(browser) {
   <script>
     // ─── State ───────────────────────────────────────────────────────────────
     const BACKEND = 'https://api.theloadtester.com';
-    const USDC_CONTRACT = '0x75E9b48F4a8f8E10f6d46a7D582aC2bEc85B7d81';
+    const USDC_CONTRACT = '0x75E9b48F4a8f8E10f6d46a7D582aC2bEc85B7d81'; // MockUSDC on Demo L2 (845302)
+    const BILLING_CONTRACT = '0xff2DEeD406363bE577878E696715e0Ce04Fa7E78'; // LoadTester Billing on Demo L2
     const CHAIN_ID = '0xCE89A6'; // 845302 in hex
 
     let currentMode = 'simple';
@@ -602,10 +603,38 @@ module.exports = async function(browser) {
 
     // ─── Region toggles ───────────────────────────────────────────────────────
     function syncRegions() {
-      ['americas','europe-de','europe-uk','asia'].forEach(r => {
-        const el = document.getElementById('region-' + r);
-        const chk = document.getElementById('r-' + r);
+      var rps = parseInt(document.getElementById('s-rps').value);
+      var isFree = (rps === 100);
+      var regions = ['americas','europe-de','europe-uk','asia'];
+      var checkedCount = 0;
+      regions.forEach(function(r) {
+        var el = document.getElementById('region-' + r);
+        var chk = document.getElementById('r-' + r);
+        if (chk.checked) checkedCount++;
         if (el) el.classList.toggle('checked', chk.checked);
+      });
+      // Free tier: enforce 1 region only
+      if (isFree && checkedCount > 1) {
+        regions.forEach(function(r) {
+          var chk = document.getElementById('r-' + r);
+          var el = document.getElementById('region-' + r);
+          if (chk.checked && r !== 'americas') {
+            chk.checked = false;
+            if (el) el.classList.remove('checked');
+          }
+        });
+        alert('Free tier: 1 region only. Upgrade for multi-region testing.');
+      }
+      // Free tier: disable extra region checkboxes
+      regions.forEach(function(r) {
+        var chk = document.getElementById('r-' + r);
+        if (isFree && r !== 'americas') {
+          chk.disabled = true;
+          chk.parentElement.style.opacity = '0.4';
+        } else {
+          chk.disabled = false;
+          chk.parentElement.style.opacity = '1';
+        }
       });
       updateSimplePrice();
     }
@@ -618,16 +647,32 @@ module.exports = async function(browser) {
 
     // ─── Simple mode ──────────────────────────────────────────────────────────
     function updateSimplePrice() {
-      const rps = parseInt(document.getElementById('s-rps').value);
-      const dur = parseInt(document.getElementById('s-dur').value);
-      const priceMap = { 100: 0, 10000: 19.37, 100000: 97.53 };
-      const price = priceMap[rps] || 0;
-      const el = document.getElementById('tier-notice');
-      if (el) el.style.display = rps === 100 ? 'flex' : 'none';
+      var rps = parseInt(document.getElementById('s-rps').value);
+      var dur = document.getElementById('s-dur');
+      var priceMap = { 100: 0, 10000: 19.37, 100000: 97.53 };
+      var price = priceMap[rps] || 0;
+      var isFree = (rps === 100);
+      var el = document.getElementById('tier-notice');
+      if (el) el.style.display = isFree ? 'flex' : 'none';
+      // Free tier: force 1 min duration
+      if (isFree) {
+        dur.value = '60';
+        dur.querySelectorAll('option').forEach(function(o) {
+          o.disabled = (o.value !== '60');
+        });
+      } else {
+        dur.querySelectorAll('option').forEach(function(o) {
+          o.disabled = false;
+        });
+      }
+      // Re-sync regions when tier changes
+      syncRegions();
       return price;
     }
     document.getElementById('s-rps').onchange = updateSimplePrice;
     document.getElementById('s-dur').onchange = updateSimplePrice;
+    // Initial enforcement on page load
+    setTimeout(function() { updateSimplePrice(); syncRegions(); }, 100);
 
     function simpleNext() {
       const url = document.getElementById('s-url').value.trim();
@@ -768,7 +813,7 @@ module.exports = async function(browser) {
         await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: CHAIN_ID }] });
       } catch(e) {
         if (e.code === 4902) {
-          await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{ chainId: CHAIN_ID, chainName: 'Demo L2', nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 }, rpcUrls: ['https://rpc.demo-l2.example.com'] }] });
+          await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{ chainId: CHAIN_ID, chainName: 'Sertone Demo L2', nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 }, rpcUrls: ['https://demo.chainrpc.net'] }] });
         }
       }
     }
