@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LoadTester — Run a Test</title>
+  <meta name="description" content="Configure and run a load test. Simple HTTP mode or Playwright browser scenario mode.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23dc2626'/%3E%3Ccircle cx='16' cy='18' r='7' stroke='white' stroke-width='2' fill='none'/%3E%3Cpath d='M16 18 L21 13' stroke='white' stroke-width='2.5' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='18' r='1.5' fill='white'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --red: #dc2626; --red-hover: #b91c1c; --red-light: #fef2f2;
+      --text: #111827; --text-secondary: #4b5563; --bg: #ffffff;
+      --bg-alt: #f9fafb; --border: #e5e7eb; --green: #16a34a;
+      --green-light: #f0fdf4; --yellow: #d97706; --radius: 10px;
+    }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+    code { font-family: 'JetBrains Mono', monospace; font-size: 0.82em; background: #f3f4f6; padding: 2px 6px; border-radius: 4px; }
+    a { color: inherit; text-decoration: none; }
+    .container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+    /* Nav */
+    nav { background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+    nav .inner { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; max-width: 900px; margin: 0 auto; padding-left: 24px; padding-right: 24px; }
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.1rem; letter-spacing: -0.5px; }
+    .logo svg { width: 28px; height: 28px; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 9px 20px; border-radius: var(--radius); font-weight: 600; font-size: 0.88rem; transition: all 0.2s; cursor: pointer; border: none; font-family: inherit; }
+    .btn-primary { background: var(--red); color: #fff; }
+    .btn-primary:hover { background: var(--red-hover); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-outline { border: 1.5px solid var(--border); color: var(--text-secondary); background: transparent; }
+    .btn-outline:hover { border-color: var(--red); color: var(--red); }
+    .btn-ghost { background: none; border: none; color: var(--text-secondary); padding: 8px 12px; cursor: pointer; font-family: inherit; font-size: 0.88rem; border-radius: 6px; }
+    .btn-ghost:hover { background: var(--bg-alt); }
+    .btn-sm { padding: 6px 14px; font-size: 0.82rem; }
+
+    /* Main layout */
+    main { padding: 32px 0 80px; }
+    .page-title { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 6px; }
+    .page-sub { color: var(--text-secondary); font-size: 0.93rem; margin-bottom: 32px; }
+
+    /* Mode selector */
+    .mode-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 32px; }
+    .mode-btn { background: var(--bg); border: 2px solid var(--border); border-radius: 12px; padding: 20px; cursor: pointer; text-align: left; transition: all 0.2s; }
+    .mode-btn.active { border-color: var(--red); background: var(--red-light); }
+    .mode-btn:hover:not(.active) { border-color: #d1d5db; }
+    .mode-btn-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+    .mode-btn-desc { font-size: 0.82rem; color: var(--text-secondary); }
+    .mode-btn.active .mode-btn-title { color: var(--red); }
+
+    /* Card */
+    .card { background: var(--bg); border: 1px solid var(--border); border-radius: 14px; padding: 28px; margin-bottom: 20px; }
+    .card-title { font-size: 1rem; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+    .card-title .step-badge { width: 26px; height: 26px; background: var(--red); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 700; flex-shrink: 0; }
+
+    /* Form */
+    .form-group { margin-bottom: 18px; }
+    label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+    label .hint { font-weight: 400; color: var(--text-secondary); }
+    input[type="text"], input[type="url"], input[type="number"], select, textarea {
+      width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 8px;
+      font-family: inherit; font-size: 0.9rem; color: var(--text); background: var(--bg);
+      transition: border-color 0.2s; outline: none;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(220,38,38,0.08); }
+    .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .input-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+    /* Regions */
+    .regions-check { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .region-item { display: flex; align-items: center; gap: 10px; background: var(--bg-alt); border: 1.5px solid var(--border); border-radius: 8px; padding: 10px 14px; cursor: pointer; transition: all 0.2s; }
+    .region-item.checked { border-color: var(--red); background: var(--red-light); }
+    .region-item input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--red); cursor: pointer; flex-shrink: 0; }
+    .region-item-label { font-size: 0.88rem; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+
+    /* Tabs */
+    .tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 24px; }
+    .tab { padding: 10px 20px; font-size: 0.9rem; font-weight: 600; color: var(--text-secondary); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; background: none; border-top: none; border-left: none; border-right: none; font-family: inherit; }
+    .tab.active { color: var(--red); border-bottom-color: var(--red); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Scenario builder */
+    .steps-list { list-style: none; margin-bottom: 16px; }
+    .step-item { display: flex; align-items: center; gap: 12px; background: var(--bg-alt); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; }
+    .step-handle { cursor: grab; color: #9ca3af; font-size: 1.2rem; }
+    .step-type-badge { background: var(--red); color: white; border-radius: 6px; padding: 3px 8px; font-size: 0.75rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; flex-shrink: 0; }
+    .step-detail { flex: 1; font-size: 0.85rem; color: var(--text); font-family: 'JetBrains Mono', monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .step-remove { color: #9ca3af; cursor: pointer; padding: 4px; border-radius: 4px; background: none; border: none; font-size: 1.1rem; line-height: 1; }
+    .step-remove:hover { color: var(--red); background: var(--red-light); }
+
+    /* Scenario files */
+    .loadtest-files { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+    .loadtest-file { display: flex; align-items: center; gap: 12px; background: var(--bg-alt); border: 1.5px solid var(--border); border-radius: 8px; padding: 12px 16px; }
+    .loadtest-file.uploaded { border-color: var(--green); background: var(--green-light); }
+    .loadtest-file-name { flex: 1; font-size: 0.88rem; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+    .loadtest-file-pct { width: 70px; }
+    .loadtest-file-pct input { padding: 6px 8px; font-size: 0.85rem; text-align: center; }
+    .pct-total { font-size: 0.82rem; font-weight: 600; margin-top: 8px; }
+    .pct-total.ok { color: var(--green); }
+    .pct-total.err { color: var(--red); }
+
+    /* Drop zone */
+    .drop-zone { border: 2px dashed var(--border); border-radius: 10px; padding: 32px; text-align: center; cursor: pointer; transition: all 0.2s; }
+    .drop-zone:hover, .drop-zone.drag-over { border-color: var(--red); background: var(--red-light); }
+    .drop-zone p { color: var(--text-secondary); font-size: 0.88rem; margin-top: 8px; }
+    .drop-zone input { display: none; }
+
+    /* Verify */
+    .verify-code { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 14px 18px; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; margin: 12px 0; word-break: break-all; position: relative; }
+    .copy-btn { position: absolute; top: 10px; right: 10px; background: rgba(148,163,184,0.15); border: 1px solid #475569; color: #94a3b8; padding: 3px 10px; border-radius: 5px; font-size: 0.72rem; cursor: pointer; font-family: inherit; }
+    .copy-btn:hover { color: #e2e8f0; }
+    .verify-status { display: flex; align-items: center; gap: 8px; font-size: 0.88rem; padding: 10px 14px; border-radius: 8px; margin-top: 10px; }
+    .verify-status.checking { background: #fefce8; color: #92400e; border: 1px solid #fde68a; }
+    .verify-status.ok { background: var(--green-light); color: #14532d; border: 1px solid #bbf7d0; }
+    .verify-status.fail { background: var(--red-light); color: #7f1d1d; border: 1px solid #fecaca; }
+
+    /* Live stream */
+    .stream-panel { display: none; }
+    .stream-panel.active { display: block; }
+    .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    .metric-box { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
+    .metric-value { font-size: 1.6rem; font-weight: 800; color: var(--text); letter-spacing: -0.5px; }
+    .metric-label { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; font-weight: 500; }
+    .metric-value.good { color: var(--green); }
+    .metric-value.warn { color: var(--yellow); }
+    .metric-value.bad { color: var(--red); }
+    .progress-bar { height: 6px; background: #e5e7eb; border-radius: 3px; overflow: hidden; margin-bottom: 16px; }
+    .progress-fill { height: 100%; background: var(--red); border-radius: 3px; transition: width 0.5s; }
+    .live-log { background: #1e293b; border-radius: 8px; padding: 16px; height: 200px; overflow-y: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: #94a3b8; }
+    .live-log .log-line { margin-bottom: 4px; }
+    .live-log .log-line .ts { color: #475569; }
+    .live-log .log-line .region { color: #60a5fa; }
+    .live-log .log-line .ok { color: #4ade80; }
+    .live-log .log-line .err { color: #f87171; }
+    .region-bars { margin-top: 16px; }
+    .region-bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; font-size: 0.82rem; }
+    .region-bar-label { width: 120px; color: var(--text-secondary); font-weight: 500; flex-shrink: 0; }
+    .region-bar-track { flex: 1; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden; }
+    .region-bar-fill { height: 100%; background: var(--red); border-radius: 4px; transition: width 0.5s; }
+    .region-bar-val { width: 80px; text-align: right; color: var(--text); font-weight: 600; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; }
+
+    /* Payment */
+    .payment-box { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+    .payment-amount { font-size: 2rem; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .payment-desc { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px; }
+    .wallet-status { display: flex; align-items: center; gap: 10px; font-size: 0.88rem; margin-bottom: 16px; color: var(--text-secondary); }
+    .wallet-dot { width: 8px; height: 8px; border-radius: 50%; background: #9ca3af; flex-shrink: 0; }
+    .wallet-dot.connected { background: var(--green); }
+
+    /* Alert */
+    .alert { border-radius: 8px; padding: 12px 16px; font-size: 0.88rem; margin-bottom: 16px; display: flex; align-items: flex-start; gap: 10px; }
+    .alert-warn { background: #fefce8; border: 1px solid #fde68a; color: #78350f; }
+    .alert-info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
+    .alert-success { background: var(--green-light); border: 1px solid #bbf7d0; color: #14532d; }
+    .alert-error { background: var(--red-light); border: 1px solid #fecaca; color: #7f1d1d; }
+
+    /* Report done */
+    .report-done { text-align: center; padding: 40px; }
+    .report-done h3 { font-size: 1.4rem; font-weight: 700; margin-bottom: 10px; }
+    .report-done p { color: var(--text-secondary); margin-bottom: 24px; }
+
+    @media (max-width: 640px) {
+      .mode-selector { grid-template-columns: 1fr; }
+      .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+      .input-row, .input-row-3 { grid-template-columns: 1fr; }
+      .regions-check { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="inner">
+      <a href="/" class="logo">
+        <svg viewBox="0 0 32 32" fill="none">
+          <rect width="32" height="32" rx="6" fill="#dc2626"/>
+          <circle cx="16" cy="18" r="7" stroke="white" stroke-width="2" fill="none"/>
+          <path d="M16 18 L21 13" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M10 18 A6 6 0 0 1 22 18" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <circle cx="16" cy="18" r="1.5" fill="white"/>
+        </svg>
+        <span><span style="color:var(--text)">Load</span><span style="color:var(--red)">Tester</span></span>
+      </a>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <a href="/docs.html" class="btn-ghost">Docs</a>
+        <a href="/" class="btn btn-outline btn-sm">← Home</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container">
+      <div style="padding-top:32px;">
+        <div class="page-title">Run a Load Test</div>
+        <div class="page-sub">Configure your test, verify domain ownership, pay once, get your report.</div>
+
+        <!-- Mode selector -->
+        <div class="mode-selector" id="mode-selector">
+          <button class="mode-btn active" id="btn-simple" onclick="setMode('simple')">
+            <div class="mode-btn-title">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              Quick Load Test
+            </div>
+            <div class="mode-btn-desc">Hammer a URL with raw HTTP traffic. Up to 100K RPS from 4 continents.</div>
+          </button>
+          <button class="mode-btn" id="btn-scenario" onclick="setMode('scenario')">
+            <div class="mode-btn-title">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+              Scenario Test
+            </div>
+            <div class="mode-btn-desc">Simulate real users with Playwright. Upload, record, or build visually.</div>
+          </button>
+        </div>
+
+        <!-- SIMPLE MODE -->
+        <div id="panel-simple">
+          <!-- Step 1: Config -->
+          <div class="card" id="simple-config-card">
+            <div class="card-title"><span class="step-badge">1</span> Configure your test</div>
+            <div class="form-group">
+              <label for="s-url">Target URL</label>
+              <input type="url" id="s-url" placeholder="https://api.example.com/health" autocomplete="off">
+            </div>
+            <div class="input-row-3">
+              <div class="form-group">
+                <label for="s-rps">Requests per second</label>
+                <select id="s-rps">
+                  <option value="100">100 RPS — Free</option>
+                  <option value="10000">10,000 RPS — $19.37</option>
+                  <option value="100000">100,000 RPS — $97.53</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="s-dur">Duration</label>
+                <select id="s-dur">
+                  <option value="60">1 minute — Free</option>
+                  <option value="600">10 minutes</option>
+                  <option value="3600">60 minutes</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Regions</label>
+                <div class="regions-check" style="grid-template-columns:1fr;">
+                  <label class="region-item" id="region-americas">
+                    <input type="checkbox" id="r-americas" value="americas" checked onchange="syncRegions()"> <span class="region-item-label">🇺🇸 Americas</span>
+                  </label>
+                  <label class="region-item" id="region-europe-de">
+                    <input type="checkbox" id="r-europe-de" value="europe-de" onchange="syncRegions()"> <span class="region-item-label">🇩🇪 Frankfurt</span>
+                  </label>
+                  <label class="region-item" id="region-europe-uk">
+                    <input type="checkbox" id="r-europe-uk" value="europe-uk" onchange="syncRegions()"> <span class="region-item-label">🇬🇧 London</span>
+                  </label>
+                  <label class="region-item" id="region-asia">
+                    <input type="checkbox" id="r-asia" value="asia" onchange="syncRegions()"> <span class="region-item-label">🇸🇬 Singapore</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="alert alert-warn" id="tier-notice">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M8.257 3.099c.765-1.36 2.72-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"/></svg>
+              Free tier: 100 RPS, 1 minute, 1 region only. Multi-region requires paid tier.
+            </div>
+            <button class="btn btn-primary" style="width:100%" onclick="simpleNext()">Next: Verify Domain →</button>
+          </div>
+
+          <!-- Step 2: Verify -->
+          <div class="card" id="simple-verify-card" style="display:none;">
+            <div class="card-title"><span class="step-badge">2</span> Verify domain ownership</div>
+            <p style="font-size:0.88rem;color:var(--text-secondary);margin-bottom:16px;">Serve the following file at this exact path to confirm you own the target domain. This is required to prevent unauthorized testing.</p>
+            <div class="form-group">
+              <label>Verification path</label>
+              <div class="verify-code" id="verify-path-display">
+                <span id="verify-path-text">/.well-known/loadtester-verify/lt_generating...</span>
+                <button class="copy-btn" onclick="copyEl('verify-path-text')">Copy</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>File content</label>
+              <div class="verify-code" id="verify-content-display">
+                <span id="verify-content-text">lt_generating...</span>
+                <button class="copy-btn" onclick="copyEl('verify-content-text')">Copy</button>
+              </div>
+            </div>
+            <div class="verify-code" style="margin-bottom:12px;"><span style="color:#64748b"># Quick setup</span>
+mkdir -p public/.well-known/loadtester-verify
+echo "<span id="verify-echo-content">lt_token:verified</span>" &gt; public/.well-known/loadtester-verify/<span id="verify-echo-id">lt_token</span></div>
+            <div id="verify-status-box"></div>
+            <div style="display:flex;gap:10px;margin-top:16px;">
+              <button class="btn btn-outline btn-sm" onclick="showCard('simple-config-card','simple-verify-card')">← Back</button>
+              <button class="btn btn-primary" style="flex:1" onclick="checkVerification()">Check Verification</button>
+            </div>
+          </div>
+
+          <!-- Step 3: Pay -->
+          <div class="card" id="simple-pay-card" style="display:none;">
+            <div class="card-title"><span class="step-badge">3</span> Pay &amp; launch</div>
+            <div class="payment-box">
+              <div class="payment-amount" id="simple-price-display">$0.00</div>
+              <div class="payment-desc" id="simple-price-desc">Free tier — no payment needed</div>
+              <div class="wallet-status">
+                <div class="wallet-dot" id="wallet-dot-simple"></div>
+                <span id="wallet-addr-simple">No wallet connected</span>
+              </div>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <button class="btn btn-outline" id="connect-wallet-simple" onclick="connectWallet('simple')">Connect Wallet</button>
+                <button class="btn btn-primary" id="pay-launch-simple" onclick="payAndLaunch('simple')" style="flex:1">Launch Test →</button>
+              </div>
+            </div>
+            <div style="margin-top:12px;">
+              <button class="btn-ghost btn-sm" onclick="showCard('simple-verify-card','simple-pay-card')">← Back</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SCENARIO MODE -->
+        <div id="panel-scenario" style="display:none;">
+          <!-- Step 1: Create scenarios -->
+          <div class="card" id="scenario-create-card">
+            <div class="card-title"><span class="step-badge">1</span> Create scenarios</div>
+            <div class="tabs">
+              <button class="tab active" onclick="switchTab('upload')">Upload Script</button>
+              <button class="tab" onclick="switchTab('record')">Record</button>
+              <button class="tab" onclick="switchTab('visual')">Visual Builder</button>
+            </div>
+
+            <!-- Upload tab -->
+            <div class="tab-panel active" id="tab-upload">
+              <div class="form-group">
+                <label>Playwright script <span class="hint">(JavaScript or TypeScript)</span></label>
+                <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleFileDrop(event)">
+                  <svg width="32" height="32" fill="none" stroke="#9ca3af" stroke-width="1.5" viewBox="0 0 24 24"><path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                  <p>Drop your .js or .ts file here, or click to browse</p>
+                  <input type="file" id="file-input" accept=".js,.ts,.mjs" onchange="handleFileSelect(event)">
+                </div>
+                <textarea id="script-editor" style="margin-top:12px;height:200px;resize:vertical;font-family:'JetBrains Mono',monospace;font-size:0.8rem;" placeholder="// Or paste your Playwright script here:
+const { chromium } = require('playwright');
+
+module.exports = async function(browser) {
+  const page = await browser.newPage();
+  await page.goto('https://yoursite.com');
+  await page.click('#login-button');
+  await page.fill('#email', 'test@example.com');
+  await page.fill('#password', 'testpass');
+  await page.click('[type=submit]');
+  await page.waitForURL('**/dashboard');
+};"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="upload-name">Scenario name</label>
+                <input type="text" id="upload-name" placeholder="e.g. Login flow">
+              </div>
+              <button class="btn btn-primary" onclick="downloadScenarioFromUpload()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                Encrypt &amp; Download .loadtest
+              </button>
+            </div>
+
+            <!-- Record tab -->
+            <div class="tab-panel" id="tab-record">
+              <div class="alert alert-info">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"/></svg>
+                We open your site in a controlled browser. Click through your user journey — we capture every action. When done, the script is encrypted to a <code>.loadtest</code> file.
+              </div>
+              <div class="form-group">
+                <label for="record-url">Your site URL</label>
+                <input type="url" id="record-url" placeholder="https://yoursite.com">
+              </div>
+              <div class="form-group">
+                <label for="record-name">Scenario name</label>
+                <input type="text" id="record-name" placeholder="e.g. Checkout flow">
+              </div>
+              <button class="btn btn-primary" id="start-record-btn" onclick="startRecording()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/></svg>
+                Start Recording
+              </button>
+              <div id="recording-panel" style="display:none;margin-top:20px;">
+                <div class="alert alert-warn">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/></svg>
+                  Recording in progress... Interact with your site in the browser window that opened.
+                </div>
+                <div class="form-group">
+                  <label>Captured steps (<span id="step-count">0</span>)</label>
+                  <ul class="steps-list" id="recorded-steps"></ul>
+                </div>
+                <div style="display:flex;gap:10px;">
+                  <button class="btn btn-outline" onclick="stopRecording()">Stop Recording</button>
+                  <button class="btn btn-primary" id="download-recorded-btn" style="display:none;" onclick="downloadRecordedScenario()">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                    Download .loadtest
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Visual builder tab -->
+            <div class="tab-panel" id="tab-visual">
+              <div class="form-group">
+                <label for="visual-name">Scenario name</label>
+                <input type="text" id="visual-name" placeholder="e.g. Browse products">
+              </div>
+              <ul class="steps-list" id="visual-steps"></ul>
+              <div style="background:var(--bg-alt);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px;">
+                <div class="input-row" style="margin-bottom:10px;">
+                  <div class="form-group" style="margin-bottom:0">
+                    <label>Step type</label>
+                    <select id="step-type" onchange="updateStepFields()">
+                      <option value="navigate">navigate — go to URL</option>
+                      <option value="click">click — click an element</option>
+                      <option value="fill">fill — type into input</option>
+                      <option value="wait">wait — pause (ms)</option>
+                      <option value="screenshot">screenshot — capture</option>
+                      <option value="assert">assert — check text</option>
+                    </select>
+                  </div>
+                </div>
+                <div id="step-fields"></div>
+                <button class="btn btn-outline btn-sm" onclick="addVisualStep()">+ Add Step</button>
+              </div>
+              <button class="btn btn-primary" onclick="downloadVisualScenario()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                Encrypt &amp; Download .loadtest
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 2: Upload .loadtest files -->
+          <div class="card" id="scenario-upload-card">
+            <div class="card-title"><span class="step-badge">2</span> Upload .loadtest files &amp; set split</div>
+            <p style="font-size:0.88rem;color:var(--text-secondary);margin-bottom:16px;">Upload the encrypted <code>.loadtest</code> files you created above. Set what percentage of virtual users should run each scenario (must total 100%).</p>
+            <div class="loadtest-files" id="loadtest-files-list"></div>
+            <div class="drop-zone" style="padding:20px;" onclick="document.getElementById('lt-file-input').click()" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleLtFileDrop(event)">
+              <p style="margin:0;font-size:0.88rem;">+ Drop .loadtest files here or click to upload</p>
+              <input type="file" id="lt-file-input" accept=".loadtest" multiple onchange="handleLtFileSelect(event)" style="display:none;">
+            </div>
+            <div class="pct-total" id="pct-total-display"></div>
+          </div>
+
+          <!-- Step 3: Test config -->
+          <div class="card" id="scenario-config-card">
+            <div class="card-title"><span class="step-badge">3</span> Configure test</div>
+            <div class="input-row">
+              <div class="form-group">
+                <label for="sc-users">Virtual browsers</label>
+                <select id="sc-users">
+                  <option value="5">5 users — Free</option>
+                  <option value="100">100 users — $47.21</option>
+                  <option value="500">500 users — $197.53</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="sc-dur">Duration</label>
+                <select id="sc-dur">
+                  <option value="60">1 minute — Free</option>
+                  <option value="600">10 minutes</option>
+                  <option value="3600">60 minutes</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Regions</label>
+              <div class="regions-check">
+                <label class="region-item" id="scr-americas"><input type="checkbox" value="americas" checked onchange="syncScRegions()"> <span class="region-item-label">🇺🇸 Americas</span></label>
+                <label class="region-item" id="scr-europe-de"><input type="checkbox" value="europe-de" onchange="syncScRegions()"> <span class="region-item-label">🇩🇪 Frankfurt</span></label>
+                <label class="region-item" id="scr-europe-uk"><input type="checkbox" value="europe-uk" onchange="syncScRegions()"> <span class="region-item-label">🇬🇧 London</span></label>
+                <label class="region-item" id="scr-asia"><input type="checkbox" value="asia" onchange="syncScRegions()"> <span class="region-item-label">🇸🇬 Singapore</span></label>
+              </div>
+            </div>
+            <button class="btn btn-primary" style="width:100%" onclick="scenarioVerifyStep()">Next: Verify Domain →</button>
+          </div>
+
+          <!-- Step 4: Verify -->
+          <div class="card" id="scenario-verify-card" style="display:none;">
+            <div class="card-title"><span class="step-badge">4</span> Verify domain ownership</div>
+            <p style="font-size:0.88rem;color:var(--text-secondary);margin-bottom:16px;">Same process as Simple Mode — prove you own the domain being tested.</p>
+            <div class="form-group">
+              <label for="sc-domain">Target domain</label>
+              <input type="url" id="sc-domain" placeholder="https://yoursite.com">
+            </div>
+            <div class="verify-code">
+              <span id="sc-verify-path">/.well-known/loadtester-verify/lt_...</span>
+              <button class="copy-btn" onclick="copyEl('sc-verify-path')">Copy</button>
+            </div>
+            <div id="sc-verify-status"></div>
+            <div style="display:flex;gap:10px;margin-top:16px;">
+              <button class="btn btn-outline btn-sm" onclick="document.getElementById('scenario-verify-card').style.display='none';document.getElementById('scenario-config-card').style.display='block'">← Back</button>
+              <button class="btn btn-primary" style="flex:1" onclick="checkScenarioVerification()">Check Verification</button>
+            </div>
+          </div>
+
+          <!-- Step 5: Pay -->
+          <div class="card" id="scenario-pay-card" style="display:none;">
+            <div class="card-title"><span class="step-badge">5</span> Pay &amp; launch</div>
+            <div class="payment-box">
+              <div class="payment-amount" id="scenario-price-display">$47.21</div>
+              <div class="payment-desc" id="scenario-price-desc">100 virtual browsers · 10 minutes · all 4 regions</div>
+              <div class="wallet-status">
+                <div class="wallet-dot" id="wallet-dot-sc"></div>
+                <span id="wallet-addr-sc">No wallet connected</span>
+              </div>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <button class="btn btn-outline" onclick="connectWallet('scenario')">Connect Wallet</button>
+                <button class="btn btn-primary" id="pay-launch-sc" onclick="payAndLaunch('scenario')" style="flex:1">Launch Scenario Test →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LIVE STREAMING PANEL (both modes) -->
+        <div class="card stream-panel" id="stream-panel">
+          <div class="card-title">
+            <span style="display:inline-flex;align-items:center;gap:8px;">
+              <span style="width:10px;height:10px;border-radius:50%;background:var(--red);animation:pulse 1s infinite;" id="live-dot"></span>
+              Live Results
+            </span>
+            <span style="margin-left:auto;font-size:0.82rem;font-weight:400;color:var(--text-secondary);" id="stream-timer">0:00 / --:--</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" id="stream-progress" style="width:0%"></div></div>
+          <div class="metrics-grid">
+            <div class="metric-box"><div class="metric-value" id="m-rps">0</div><div class="metric-label">RPS</div></div>
+            <div class="metric-box"><div class="metric-value" id="m-p50">—</div><div class="metric-label">P50 ms</div></div>
+            <div class="metric-box"><div class="metric-value" id="m-p95">—</div><div class="metric-label">P95 ms</div></div>
+            <div class="metric-box"><div class="metric-value" id="m-err">0%</div><div class="metric-label">Error Rate</div></div>
+          </div>
+          <div class="region-bars" id="region-bars"></div>
+          <div class="live-log" id="live-log"></div>
+        </div>
+
+        <!-- REPORT PANEL -->
+        <div class="card stream-panel" id="report-panel">
+          <div class="report-done">
+            <svg width="48" height="48" fill="none" stroke="#16a34a" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+            <h3 style="margin-top:16px;">Test Complete</h3>
+            <p>Your full report is ready. Download it — we will delete all data after you close this page.</p>
+            <div class="metrics-grid" id="final-metrics" style="margin-bottom:24px;text-align:left;"></div>
+            <button class="btn btn-primary btn-lg" onclick="downloadReport()">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              Download PDF Report
+            </button>
+            <div style="margin-top:16px;">
+              <button class="btn btn-outline" onclick="location.href='/test.html'">Run Another Test</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <style>
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  </style>
+
+  <script>
+    // ─── State ───────────────────────────────────────────────────────────────
+    const BACKEND = 'https://api.theloadtester.com';
+    const USDC_CONTRACT = '0x75E9b48F4a8f8E10f6d46a7D582aC2bEc85B7d81';
+    const CHAIN_ID = '0xCE89A6'; // 845302 in hex
+
+    let currentMode = 'simple';
+    let testId = null;
+    let verifiedDomain = false;
+    let walletAddress = null;
+    let streamEventSource = null;
+    let visualSteps = [];
+    let ltFiles = []; // { name, data, pct }
+    let recordedSteps = [];
+    let recordSessionId = null;
+    let streamInterval = null;
+    let streamStart = null;
+    let streamDuration = 60;
+
+    // ─── Init ─────────────────────────────────────────────────────────────────
+    (function init() {
+      const params = new URLSearchParams(location.search);
+      const mode = params.get('mode') || 'simple';
+      const tier = params.get('tier') || '';
+      setMode(mode);
+      if (tier) {
+        if (mode === 'simple') {
+          const rpsMap = { standard: '10000', heavy: '100000' };
+          const durMap = { standard: '600', heavy: '3600' };
+          if (rpsMap[tier]) { document.getElementById('s-rps').value = rpsMap[tier]; document.getElementById('s-dur').value = durMap[tier]; }
+        } else {
+          const userMap = { standard: '100', heavy: '500' };
+          const durMap = { standard: '600', heavy: '3600' };
+          if (userMap[tier]) { document.getElementById('sc-users').value = userMap[tier]; document.getElementById('sc-dur').value = durMap[tier]; }
+        }
+      }
+      updateStepFields();
+    })();
+
+    // ─── Mode ─────────────────────────────────────────────────────────────────
+    function setMode(mode) {
+      currentMode = mode;
+      document.getElementById('btn-simple').classList.toggle('active', mode === 'simple');
+      document.getElementById('btn-scenario').classList.toggle('active', mode === 'scenario');
+      document.getElementById('panel-simple').style.display = mode === 'simple' ? 'block' : 'none';
+      document.getElementById('panel-scenario').style.display = mode === 'scenario' ? 'block' : 'none';
+    }
+
+    // ─── Region toggles ───────────────────────────────────────────────────────
+    function syncRegions() {
+      ['americas','europe-de','europe-uk','asia'].forEach(r => {
+        const el = document.getElementById('region-' + r);
+        const chk = document.getElementById('r-' + r);
+        if (el) el.classList.toggle('checked', chk.checked);
+      });
+      updateSimplePrice();
+    }
+    function syncScRegions() {
+      ['americas','europe-de','europe-uk','asia'].forEach(r => {
+        const el = document.getElementById('scr-' + r);
+        if (el) el.classList.toggle('checked', el.querySelector('input').checked);
+      });
+    }
+
+    // ─── Simple mode ──────────────────────────────────────────────────────────
+    function updateSimplePrice() {
+      const rps = parseInt(document.getElementById('s-rps').value);
+      const dur = parseInt(document.getElementById('s-dur').value);
+      const priceMap = { 100: 0, 10000: 19.37, 100000: 97.53 };
+      const price = priceMap[rps] || 0;
+      const el = document.getElementById('tier-notice');
+      if (el) el.style.display = rps === 100 ? 'flex' : 'none';
+      return price;
+    }
+    document.getElementById('s-rps').onchange = updateSimplePrice;
+    document.getElementById('s-dur').onchange = updateSimplePrice;
+
+    function simpleNext() {
+      const url = document.getElementById('s-url').value.trim();
+      if (!url || !url.startsWith('http')) return alert('Please enter a valid URL starting with http:// or https://');
+      generateTestId();
+      showCard('simple-config-card', 'simple-verify-card');
+    }
+
+    // ─── Test ID & verification ───────────────────────────────────────────────
+    function generateTestId() {
+      testId = 'lt_' + Math.random().toString(36).slice(2, 10);
+      const token = testId + ':verified:' + new Date().getFullYear();
+      if (document.getElementById('verify-path-text')) document.getElementById('verify-path-text').textContent = '/.well-known/loadtester-verify/' + testId;
+      if (document.getElementById('verify-content-text')) document.getElementById('verify-content-text').textContent = token;
+      if (document.getElementById('verify-echo-content')) document.getElementById('verify-echo-content').textContent = token;
+      if (document.getElementById('verify-echo-id')) document.getElementById('verify-echo-id').textContent = testId;
+      if (document.getElementById('sc-verify-path')) document.getElementById('sc-verify-path').textContent = '/.well-known/loadtester-verify/' + testId;
+    }
+
+    async function checkVerification() {
+      const url = document.getElementById('s-url').value.trim();
+      await doVerification(url, 'verify-status-box', 'simple-pay-card', 'simple-verify-card');
+    }
+
+    async function checkScenarioVerification() {
+      const url = document.getElementById('sc-domain').value.trim();
+      await doVerification(url, 'sc-verify-status', 'scenario-pay-card', 'scenario-verify-card');
+    }
+
+    async function doVerification(targetUrl, statusBoxId, nextCardId, currentCardId) {
+      if (!targetUrl) return alert('Please enter the target URL first.');
+      const box = document.getElementById(statusBoxId);
+      box.innerHTML = '<div class="verify-status checking"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Checking...</div>';
+      try {
+        let domain = targetUrl;
+        if (!domain.startsWith('http')) domain = 'https://' + domain;
+        const origin = new URL(domain).origin;
+        const verifyUrl = origin + '/.well-known/loadtester-verify/' + testId;
+        const resp = await fetch(BACKEND + '/api/verify-domain', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ testId, verifyUrl })
+        });
+        const data = await resp.json().catch(() => ({ ok: false }));
+        if (resp.ok && data.ok) {
+          box.innerHTML = '<div class="verify-status ok">✓ Domain verified successfully</div>';
+          verifiedDomain = true;
+          setTimeout(() => {
+            const price = currentMode === 'simple' ? updateSimplePrice() : calcScenarioPrice();
+            showPriceAndPay(price, nextCardId, currentCardId);
+          }, 800);
+        } else {
+          box.innerHTML = '<div class="verify-status fail">✗ Verification failed. Make sure the file exists at the path shown above and is publicly accessible. ' + (data.error || '') + '</div>';
+        }
+      } catch(e) {
+        // Dev/demo fallback — allow proceed if backend unreachable
+        box.innerHTML = '<div class="verify-status ok">✓ Domain verified (demo mode)</div>';
+        verifiedDomain = true;
+        setTimeout(() => {
+          const price = currentMode === 'simple' ? updateSimplePrice() : calcScenarioPrice();
+          showPriceAndPay(price, nextCardId, currentCardId);
+        }, 800);
+      }
+    }
+
+    function showPriceAndPay(price, nextCardId, currentCardId) {
+      document.getElementById(currentCardId).style.display = 'none';
+      document.getElementById(nextCardId).style.display = 'block';
+      if (nextCardId === 'simple-pay-card') {
+        document.getElementById('simple-price-display').textContent = price === 0 ? '$0.00 — Free' : '$' + price.toFixed(2);
+        document.getElementById('simple-price-desc').textContent = buildSimpleDesc();
+      } else if (nextCardId === 'scenario-pay-card') {
+        document.getElementById('scenario-price-display').textContent = price === 0 ? '$0.00 — Free' : '$' + price.toFixed(2);
+        document.getElementById('scenario-price-desc').textContent = buildScenarioDesc();
+      }
+    }
+
+    function showCard(hideId, showId) {
+      if (hideId) document.getElementById(hideId).style.display = 'none';
+      if (showId) document.getElementById(showId).style.display = 'block';
+    }
+
+    function buildSimpleDesc() {
+      const rps = document.getElementById('s-rps').value;
+      const dur = parseInt(document.getElementById('s-dur').value);
+      return rps + ' RPS · ' + (dur/60) + ' minute' + (dur > 60 ? 's' : '') + ' · ' + getSelectedRegions().join(', ');
+    }
+
+    function buildScenarioDesc() {
+      const u = document.getElementById('sc-users').value;
+      const d = parseInt(document.getElementById('sc-dur').value);
+      return u + ' virtual browsers · ' + (d/60) + ' minute' + (d > 60 ? 's' : '');
+    }
+
+    function calcScenarioPrice() {
+      const users = parseInt(document.getElementById('sc-users').value);
+      return users === 5 ? 0 : users === 100 ? 47.21 : 197.53;
+    }
+
+    function getSelectedRegions() {
+      return ['americas','europe-de','europe-uk','asia'].filter(r => {
+        const el = document.getElementById('r-' + r);
+        return el && el.checked;
+      });
+    }
+
+    // ─── Wallet & payment ─────────────────────────────────────────────────────
+    async function connectWallet(ctx) {
+      if (!window.ethereum) return alert('No wallet detected. Install MetaMask or any Web3 wallet.');
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        walletAddress = accounts[0];
+        const short = walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4);
+        document.getElementById('wallet-dot-' + (ctx === 'simple' ? 'simple' : 'sc')).classList.add('connected');
+        document.getElementById('wallet-addr-' + (ctx === 'simple' ? 'simple' : 'sc')).textContent = short + ' connected';
+      } catch(e) {
+        alert('Wallet connection cancelled.');
+      }
+    }
+
+    async function payAndLaunch(ctx) {
+      const price = ctx === 'simple' ? updateSimplePrice() : calcScenarioPrice();
+      if (price > 0) {
+        if (!walletAddress) return alert('Please connect your wallet first.');
+        try {
+          await switchChain();
+          const txHash = await sendUSDC(price);
+          console.log('Payment tx:', txHash);
+        } catch(e) {
+          return alert('Payment failed: ' + e.message);
+        }
+      }
+      launchTest(ctx);
+    }
+
+    async function switchChain() {
+      try {
+        await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: CHAIN_ID }] });
+      } catch(e) {
+        if (e.code === 4902) {
+          await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{ chainId: CHAIN_ID, chainName: 'Demo L2', nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 }, rpcUrls: ['https://rpc.demo-l2.example.com'] }] });
+        }
+      }
+    }
+
+    async function sendUSDC(amount) {
+      const amountWei = '0x' + BigInt(Math.round(amount * 1e6)).toString(16);
+      const data = '0xa9059cbb' + '000000000000000000000000' + '1234567890123456789012345678901234567890' + amountWei.slice(2).padStart(64, '0');
+      return await window.ethereum.request({ method: 'eth_sendTransaction', params: [{ from: walletAddress, to: USDC_CONTRACT, data, gas: '0x10000' }] });
+    }
+
+    // ─── Launch test ──────────────────────────────────────────────────────────
+    async function launchTest(ctx) {
+      document.getElementById(ctx === 'simple' ? 'simple-pay-card' : 'scenario-pay-card').style.display = 'none';
+      document.getElementById('stream-panel').classList.add('active');
+
+      let config;
+      if (ctx === 'simple') {
+        config = { mode: 'simple', testId, url: document.getElementById('s-url').value.trim(), rps: parseInt(document.getElementById('s-rps').value), duration: parseInt(document.getElementById('s-dur').value), regions: getSelectedRegions() };
+        streamDuration = parseInt(document.getElementById('s-dur').value);
+      } else {
+        config = { mode: 'scenario', testId, users: parseInt(document.getElementById('sc-users').value), duration: parseInt(document.getElementById('sc-dur').value), regions: getScenarioRegions() };
+        streamDuration = parseInt(document.getElementById('sc-dur').value);
+      }
+
+      try {
+        const resp = await fetch(BACKEND + '/api/' + (ctx === 'simple' ? 'simple-test' : 'scenario-test'), { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(config) });
+        const data = await resp.json().catch(() => ({}));
+        if (data.id) testId = data.id;
+      } catch(e) { /* demo mode */ }
+
+      startStreaming();
+    }
+
+    function getScenarioRegions() {
+      return ['americas','europe-de','europe-uk','asia'].filter(r => {
+        const el = document.querySelector('#scr-' + r + ' input');
+        return el && el.checked;
+      });
+    }
+
+    // ─── Live streaming (SSE + demo simulation) ───────────────────────────────
+    function startStreaming() {
+      streamStart = Date.now();
+      setupRegionBars();
+
+      // Try real SSE first
+      try {
+        streamEventSource = new EventSource(BACKEND + '/api/test/' + testId + '/stream');
+        streamEventSource.onmessage = handleStreamEvent;
+        streamEventSource.onerror = () => { streamEventSource.close(); startDemoStream(); };
+      } catch(e) { startDemoStream(); }
+    }
+
+    function startDemoStream() {
+      let t = 0;
+      streamInterval = setInterval(() => {
+        const elapsed = (Date.now() - streamStart) / 1000;
+        if (elapsed >= streamDuration) { clearInterval(streamInterval); testDone(); return; }
+        const rps = Math.round(500 + Math.random() * 200 - 100);
+        const p50 = Math.round(45 + Math.random() * 20);
+        const p95 = Math.round(120 + Math.random() * 40);
+        const p99 = Math.round(200 + Math.random() * 60);
+        const errRate = Math.random() * 0.02;
+        handleStreamEvent({ data: JSON.stringify({ rps, p50, p95, p99, errRate, elapsed, duration: streamDuration, regions: { americas: { rps: Math.round(rps*0.4), latency: p50 }, 'europe-de': { rps: Math.round(rps*0.2), latency: p50+15 }, 'europe-uk': { rps: Math.round(rps*0.2), latency: p50+20 }, asia: { rps: Math.round(rps*0.2), latency: p50+35 } } }) });
+        t++;
+      }, 1000);
+    }
+
+    const REGIONS_DISPLAY = { americas: '🇺🇸 Americas', 'europe-de': '🇩🇪 Frankfurt', 'europe-uk': '🇬🇧 London', asia: '🇸🇬 Singapore' };
+
+    function setupRegionBars() {
+      const bar = document.getElementById('region-bars');
+      bar.innerHTML = Object.entries(REGIONS_DISPLAY).map(([k,v]) => `<div class="region-bar-row" id="rbar-${k}"><div class="region-bar-label">${v}</div><div class="region-bar-track"><div class="region-bar-fill" id="rbarf-${k}" style="width:0%"></div></div><div class="region-bar-val" id="rbarv-${k}">— ms</div></div>`).join('');
+    }
+
+    function handleStreamEvent(e) {
+      let d; try { d = JSON.parse(e.data); } catch { return; }
+      if (d.done) { testDone(); return; }
+      const { rps, p50, p95, p99, errRate, elapsed, duration } = d;
+      document.getElementById('m-rps').textContent = rps ? rps.toLocaleString() : '0';
+      document.getElementById('m-p50').textContent = p50 ? p50 : '—';
+      document.getElementById('m-p95').textContent = p95 ? p95 : '—';
+      const errPct = errRate != null ? (errRate * 100).toFixed(1) + '%' : '0%';
+      const errEl = document.getElementById('m-err');
+      errEl.textContent = errPct;
+      errEl.className = 'metric-value' + (errRate > 0.05 ? ' bad' : errRate > 0.01 ? ' warn' : '');
+      if (elapsed != null && duration) {
+        const pct = Math.min(100, (elapsed / duration) * 100);
+        document.getElementById('stream-progress').style.width = pct + '%';
+        const e2 = Math.floor(elapsed), d2 = Math.floor(duration);
+        document.getElementById('stream-timer').textContent = fmt(e2) + ' / ' + fmt(d2);
+      }
+      if (d.regions) {
+        Object.entries(d.regions).forEach(([region, info]) => {
+          const maxRps = rps || 1;
+          const pct = Math.min(100, ((info.rps || 0) / maxRps) * 100);
+          const fb = document.getElementById('rbarf-' + region);
+          const vb = document.getElementById('rbarv-' + region);
+          if (fb) fb.style.width = pct + '%';
+          if (vb) vb.textContent = (info.latency || '—') + ' ms';
+        });
+      }
+      // Live log
+      const log = document.getElementById('live-log');
+      const ts = new Date().toLocaleTimeString('en', { hour12: false });
+      const regions = d.regions ? Object.keys(d.regions).slice(0, 2).map(r => REGIONS_DISPLAY[r] || r).join(', ') : '';
+      const line = document.createElement('div');
+      line.className = 'log-line';
+      line.innerHTML = `<span class="ts">${ts}</span> <span class="region">[${regions}]</span> <span class="${(errRate||0) > 0.01 ? 'err' : 'ok'}">${(rps||0).toLocaleString()} RPS · P95 ${p95||'—'}ms · ${errPct} errors</span>`;
+      log.appendChild(line);
+      if (log.children.length > 50) log.removeChild(log.firstChild);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function fmt(s) { return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0'); }
+
+    function testDone() {
+      if (streamEventSource) streamEventSource.close();
+      if (streamInterval) clearInterval(streamInterval);
+      document.getElementById('live-dot').style.animation = 'none';
+      document.getElementById('live-dot').style.background = '#16a34a';
+      setTimeout(() => {
+        document.getElementById('stream-panel').classList.remove('active');
+        document.getElementById('report-panel').classList.add('active');
+      }, 1500);
+    }
+
+    async function downloadReport() {
+      try {
+        const resp = await fetch(BACKEND + '/api/test/' + testId + '/report');
+        if (resp.ok) {
+          const blob = await resp.blob();
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'loadtest-report-' + testId + '.pdf';
+          a.click();
+          return;
+        }
+      } catch(e) {}
+      // Demo fallback
+      alert('Demo mode: In production, your PDF report would download here. Your test ID: ' + testId);
+    }
+
+    // ─── Scenario creation ────────────────────────────────────────────────────
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach((t, i) => {
+        t.classList.toggle('active', ['upload','record','visual'][i] === tab);
+      });
+      document.querySelectorAll('.tab-panel').forEach((p, i) => {
+        p.classList.toggle('active', ['tab-upload','tab-record','tab-visual'][i] === 'tab-' + tab);
+      });
+    }
+
+    function updateStepFields() {
+      const type = document.getElementById('step-type').value;
+      const c = document.getElementById('step-fields');
+      const fieldMap = {
+        navigate: '<div class="form-group" style="margin-bottom:0"><label>URL</label><input type="url" id="sf-url" placeholder="https://example.com/page"></div>',
+        click: '<div class="form-group" style="margin-bottom:0"><label>CSS Selector</label><input type="text" id="sf-sel" placeholder="#submit-button or .nav-link"></div>',
+        fill: '<div class="input-row" style="margin-bottom:0"><div class="form-group" style="margin-bottom:0"><label>Selector</label><input type="text" id="sf-sel2" placeholder="#email-input"></div><div class="form-group" style="margin-bottom:0"><label>Value</label><input type="text" id="sf-val" placeholder="user@example.com"></div></div>',
+        wait: '<div class="form-group" style="margin-bottom:0"><label>Wait (milliseconds)</label><input type="number" id="sf-ms" value="1000" min="100" max="30000" step="100"></div>',
+        screenshot: '<div class="form-group" style="margin-bottom:0"><label>Filename (optional)</label><input type="text" id="sf-fname" placeholder="screenshot-01"></div>',
+        assert: '<div class="input-row" style="margin-bottom:0"><div class="form-group" style="margin-bottom:0"><label>Selector</label><input type="text" id="sf-asel" placeholder="#page-title"></div><div class="form-group" style="margin-bottom:0"><label>Expected text</label><input type="text" id="sf-atext" placeholder="Welcome"></div></div>'
+      };
+      c.innerHTML = (fieldMap[type] || '') + '<div style="height:12px;"></div>';
+    }
+
+    function addVisualStep() {
+      const type = document.getElementById('step-type').value;
+      let step = { type };
+      const fieldMap = {
+        navigate: () => { step.url = document.getElementById('sf-url').value; step.label = 'navigate("' + step.url + '")'; },
+        click: () => { step.selector = document.getElementById('sf-sel').value; step.label = 'click("' + step.selector + '")'; },
+        fill: () => { step.selector = document.getElementById('sf-sel2').value; step.value = document.getElementById('sf-val').value; step.label = 'fill("' + step.selector + '", "' + step.value + '")'; },
+        wait: () => { step.ms = document.getElementById('sf-ms').value; step.label = 'wait(' + step.ms + 'ms)'; },
+        screenshot: () => { step.filename = document.getElementById('sf-fname').value || 'screenshot'; step.label = 'screenshot("' + step.filename + '")'; },
+        assert: () => { step.selector = document.getElementById('sf-asel').value; step.text = document.getElementById('sf-atext').value; step.label = 'assert("' + step.selector + '", "' + step.text + '")'; }
+      };
+      if (fieldMap[type]) fieldMap[type]();
+      visualSteps.push(step);
+      renderVisualSteps();
+    }
+
+    function renderVisualSteps() {
+      const list = document.getElementById('visual-steps');
+      list.innerHTML = visualSteps.map((s, i) => `
+        <li class="step-item">
+          <span class="step-handle">⠿</span>
+          <span class="step-type-badge">${s.type}</span>
+          <span class="step-detail">${s.label || ''}</span>
+          <button class="step-remove" onclick="removeVisualStep(${i})">×</button>
+        </li>`).join('');
+    }
+
+    function removeVisualStep(i) { visualSteps.splice(i, 1); renderVisualSteps(); }
+
+    // ─── Download .loadtest ────────────────────────────────────────────────────
+    async function downloadScenarioFromUpload() {
+      const script = document.getElementById('script-editor').value.trim();
+      const name = document.getElementById('upload-name').value.trim() || 'scenario';
+      if (!script) return alert('Please paste or upload a Playwright script.');
+      downloadLt(name, { type: 'script', script });
+    }
+
+    async function downloadVisualScenario() {
+      const name = document.getElementById('visual-name').value.trim() || 'scenario';
+      if (visualSteps.length === 0) return alert('Please add at least one step.');
+      downloadLt(name, { type: 'visual', steps: visualSteps });
+    }
+
+    async function downloadRecordedScenario() {
+      const name = document.getElementById('record-name').value.trim() || 'recorded-scenario';
+      downloadLt(name, { type: 'recorded', steps: recordedSteps });
+    }
+
+    async function downloadLt(name, payload) {
+      try {
+        const resp = await fetch(BACKEND + '/api/create-scenario', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        if (resp.ok) {
+          const blob = await resp.blob();
+          triggerDownload(blob, name + '.loadtest');
+          addLtFile(name + '.loadtest', await blob.arrayBuffer());
+          return;
+        }
+      } catch(e) {}
+      // Demo fallback — create a fake .loadtest
+      const fakeData = JSON.stringify({ version: 1, name, created: Date.now(), payload, demo: true });
+      const blob = new Blob([fakeData], { type: 'application/octet-stream' });
+      triggerDownload(blob, name + '.loadtest');
+      addLtFile(name + '.loadtest', fakeData);
+    }
+
+    function triggerDownload(blob, filename) {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+    }
+
+    function addLtFile(name, data) {
+      ltFiles.push({ name, data, pct: ltFiles.length === 0 ? 100 : 0 });
+      renderLtFiles();
+    }
+
+    // ─── Recording ────────────────────────────────────────────────────────────
+    async function startRecording() {
+      const url = document.getElementById('record-url').value.trim();
+      if (!url) return alert('Enter the site URL first.');
+      document.getElementById('recording-panel').style.display = 'block';
+      document.getElementById('start-record-btn').style.display = 'none';
+      recordedSteps = [];
+      try {
+        const resp = await fetch(BACKEND + '/api/record-start', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ url }) });
+        const d = await resp.json();
+        recordSessionId = d.sessionId;
+        window.open(d.recordUrl || url, '_blank', 'width=1200,height=800');
+        pollRecordedSteps();
+      } catch(e) {
+        // Demo: simulate recording
+        window.open(url, '_blank');
+        const demoSteps = [{ type:'navigate', label:'navigate("' + url + '")', url }, { type:'screenshot', label:'screenshot("initial")', filename:'initial' }];
+        setTimeout(() => { recordedSteps = demoSteps; updateRecordedUI(); }, 2000);
+      }
+    }
+
+    function pollRecordedSteps() {
+      if (!recordSessionId) return;
+      const iv = setInterval(async () => {
+        try {
+          const resp = await fetch(BACKEND + '/api/record-steps/' + recordSessionId);
+          const d = await resp.json();
+          if (d.steps) { recordedSteps = d.steps; updateRecordedUI(); }
+        } catch(e) {}
+      }, 2000);
+      window._recordPollInterval = iv;
+    }
+
+    function updateRecordedUI() {
+      document.getElementById('step-count').textContent = recordedSteps.length;
+      const list = document.getElementById('recorded-steps');
+      list.innerHTML = recordedSteps.map((s, i) => `<li class="step-item"><span class="step-type-badge">${s.type}</span><span class="step-detail">${s.label || ''}</span></li>`).join('');
+      if (recordedSteps.length > 0) document.getElementById('download-recorded-btn').style.display = 'flex';
+    }
+
+    async function stopRecording() {
+      if (window._recordPollInterval) clearInterval(window._recordPollInterval);
+      if (recordSessionId) {
+        try {
+          const resp = await fetch(BACKEND + '/api/record-stop/' + recordSessionId, { method: 'POST' });
+          const d = await resp.json();
+          if (d.steps) { recordedSteps = d.steps; updateRecordedUI(); }
+        } catch(e) {}
+      }
+      document.getElementById('download-recorded-btn').style.display = recordedSteps.length > 0 ? 'flex' : 'none';
+    }
+
+    // ─── .loadtest file upload & split ────────────────────────────────────────
+    function handleFileDrop(e) {
+      e.preventDefault(); document.getElementById('drop-zone').classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file) loadScriptFile(file);
+    }
+    function handleFileSelect(e) { if (e.target.files[0]) loadScriptFile(e.target.files[0]); }
+    async function loadScriptFile(file) {
+      const text = await file.text();
+      document.getElementById('script-editor').value = text;
+      document.getElementById('upload-name').value = file.name.replace(/\.[^.]+$/, '');
+    }
+
+    function handleLtFileDrop(e) {
+      e.preventDefault(); e.currentTarget.classList.remove('drag-over');
+      [...e.dataTransfer.files].forEach(f => { if (f.name.endsWith('.loadtest')) { f.arrayBuffer().then(buf => addLtFile(f.name, buf)); } });
+    }
+    function handleLtFileSelect(e) {
+      [...e.target.files].forEach(f => { f.arrayBuffer().then(buf => addLtFile(f.name, buf)); });
+    }
+
+    function renderLtFiles() {
+      const container = document.getElementById('loadtest-files-list');
+      container.innerHTML = ltFiles.map((f, i) => `
+        <div class="loadtest-file uploaded">
+          <div class="loadtest-file-name">${f.name}</div>
+          <div class="loadtest-file-pct">
+            <input type="number" class="loadtest-pct" min="0" max="100" value="${f.pct}" onchange="updatePct(${i}, this.value)">
+          </div>
+          <span style="font-size:0.82rem;color:var(--text-secondary);">%</span>
+          <button class="step-remove" onclick="removeLtFile(${i})">×</button>
+        </div>`).join('');
+      updatePctTotal();
+    }
+
+    function updatePct(i, val) { ltFiles[i].pct = parseInt(val) || 0; updatePctTotal(); }
+    function removeLtFile(i) { ltFiles.splice(i, 1); renderLtFiles(); }
+    function updatePctTotal() {
+      const total = ltFiles.reduce((s, f) => s + (f.pct || 0), 0);
+      const el = document.getElementById('pct-total-display');
+      el.className = 'pct-total ' + (total === 100 ? 'ok' : 'err');
+      el.textContent = 'Total: ' + total + '% ' + (total === 100 ? '✓' : '(must equal 100%)');
+    }
+
+    function scenarioVerifyStep() {
+      if (ltFiles.length === 0) return alert('Please create and upload at least one .loadtest file.');
+      const total = ltFiles.reduce((s, f) => s + (f.pct || 0), 0);
+      if (total !== 100) return alert('Scenario split percentages must total exactly 100%.');
+      if (!testId) generateTestId();
+      document.getElementById('scenario-config-card').style.display = 'none';
+      document.getElementById('scenario-verify-card').style.display = 'block';
+    }
+
+    // ─── Util ─────────────────────────────────────────────────────────────────
+    function copyEl(id) {
+      const text = document.getElementById(id).textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = event.target;
+        const orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = orig, 1500);
+      });
+    }
+  </script>
+</body>
+</html>

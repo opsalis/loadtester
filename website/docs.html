@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Docs — LoadTester</title>
+  <meta name="description" content="LoadTester documentation: quick start, scenario creation, domain verification, metrics reference, CI/CD integration, and API reference.">
+  <link rel="canonical" href="https://theloadtester.com/docs.html">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23dc2626'/%3E%3Ccircle cx='16' cy='18' r='7' stroke='white' stroke-width='2' fill='none'/%3E%3Cpath d='M16 18 L21 13' stroke='white' stroke-width='2.5' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='18' r='1.5' fill='white'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --red: #dc2626; --red-hover: #b91c1c; --red-light: #fef2f2;
+      --text: #111827; --text-secondary: #4b5563; --bg: #ffffff;
+      --bg-alt: #f9fafb; --border: #e5e7eb; --radius: 10px;
+    }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+    code { font-family: 'JetBrains Mono', monospace; font-size: 0.83em; background: #f3f4f6; padding: 2px 6px; border-radius: 4px; color: #dc2626; }
+    a { color: var(--red); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    nav { background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+    nav .inner { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; max-width: 1200px; margin: 0 auto; }
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.1rem; color: var(--text); letter-spacing: -0.5px; }
+    .logo svg { width: 28px; height: 28px; }
+    .btn { display: inline-flex; align-items: center; padding: 9px 20px; border-radius: var(--radius); font-weight: 600; font-size: 0.88rem; transition: all 0.2s; cursor: pointer; border: none; font-family: inherit; text-decoration: none; }
+    .btn-primary { background: var(--red); color: #fff; }
+    .btn-primary:hover { background: var(--red-hover); text-decoration: none; }
+
+    .docs-layout { display: grid; grid-template-columns: 240px 1fr; max-width: 1200px; margin: 0 auto; padding: 0 24px; gap: 48px; padding-top: 40px; padding-bottom: 80px; }
+
+    /* Sidebar */
+    .sidebar { position: sticky; top: 80px; height: fit-content; }
+    .sidebar-section { margin-bottom: 24px; }
+    .sidebar-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 8px; }
+    .sidebar-links { list-style: none; }
+    .sidebar-links li a { display: block; padding: 5px 10px; font-size: 0.87rem; color: var(--text-secondary); border-radius: 6px; border-left: 2px solid transparent; }
+    .sidebar-links li a:hover { color: var(--text); background: var(--bg-alt); text-decoration: none; }
+    .sidebar-links li a.active { color: var(--red); border-left-color: var(--red); background: var(--red-light); }
+
+    /* Content */
+    .docs-content h1 { font-size: 2rem; font-weight: 800; letter-spacing: -0.8px; margin-bottom: 12px; }
+    .docs-content .lead { font-size: 1.05rem; color: var(--text-secondary); margin-bottom: 40px; line-height: 1.7; }
+    .section { margin-bottom: 60px; }
+    .section h2 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 12px; padding-top: 20px; border-top: 2px solid var(--border); }
+    .section h3 { font-size: 1.05rem; font-weight: 700; margin: 24px 0 10px; }
+    .section p { color: var(--text-secondary); margin-bottom: 14px; line-height: 1.7; }
+    .section ul, .section ol { color: var(--text-secondary); padding-left: 20px; margin-bottom: 14px; }
+    .section li { margin-bottom: 6px; line-height: 1.7; }
+    pre { background: #1e293b; color: #e2e8f0; border-radius: 10px; padding: 20px 24px; overflow-x: auto; margin: 16px 0; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.6; }
+    pre .comment { color: #64748b; }
+    pre .str { color: #86efac; }
+    pre .kw { color: #93c5fd; }
+    pre .fn { color: #fbbf24; }
+    .alert { border-radius: 8px; padding: 14px 16px; font-size: 0.88rem; margin: 16px 0; display: flex; gap: 10px; line-height: 1.6; }
+    .alert-info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
+    .alert-warn { background: #fefce8; border: 1px solid #fde68a; color: #78350f; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.88rem; }
+    th { background: var(--bg-alt); padding: 10px 14px; text-align: left; font-weight: 600; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); border-bottom: 2px solid var(--border); }
+    td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+    td code { background: var(--bg-alt); }
+    .method { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; margin-right: 6px; }
+    .method.post { background: #dcfce7; color: #166534; }
+    .method.get { background: #dbeafe; color: #1e40af; }
+
+    @media (max-width: 768px) { .docs-layout { grid-template-columns: 1fr; } .sidebar { display: none; } }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="inner">
+      <a href="/" class="logo">
+        <svg viewBox="0 0 32 32" fill="none">
+          <rect width="32" height="32" rx="6" fill="#dc2626"/>
+          <circle cx="16" cy="18" r="7" stroke="white" stroke-width="2" fill="none"/>
+          <path d="M16 18 L21 13" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M10 18 A6 6 0 0 1 22 18" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <circle cx="16" cy="18" r="1.5" fill="white"/>
+        </svg>
+        <span><span>Load</span><span style="color:var(--red)">Tester</span></span>
+      </a>
+      <a href="/test.html" class="btn btn-primary">Start Testing</a>
+    </div>
+  </nav>
+
+  <div class="docs-layout">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Getting Started</div>
+        <ul class="sidebar-links">
+          <li><a href="#quick-simple" class="active">Quick Load Test</a></li>
+          <li><a href="#quick-scenario">Scenario Test</a></li>
+        </ul>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">Scenario Creation</div>
+        <ul class="sidebar-links">
+          <li><a href="#scenario-upload">Upload Script</a></li>
+          <li><a href="#scenario-record">Record</a></li>
+          <li><a href="#scenario-visual">Visual Builder</a></li>
+          <li><a href="#loadtest-format">.loadtest Format</a></li>
+        </ul>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">Testing</div>
+        <ul class="sidebar-links">
+          <li><a href="#domain-verify">Domain Verification</a></li>
+          <li><a href="#metrics">Metrics Explained</a></li>
+          <li><a href="#reports">PDF Reports</a></li>
+        </ul>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">Integration</div>
+        <ul class="sidebar-links">
+          <li><a href="#api">API Reference</a></li>
+          <li><a href="#curl">curl Examples</a></li>
+          <li><a href="#github-actions">GitHub Actions</a></li>
+          <li><a href="#gitlab-ci">GitLab CI</a></li>
+        </ul>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">Reference</div>
+        <ul class="sidebar-links">
+          <li><a href="#playwright-guide">Playwright Guide</a></li>
+          <li><a href="#regions">Regions</a></li>
+          <li><a href="#pricing-ref">Pricing</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <div class="docs-content">
+      <h1>Documentation</h1>
+      <p class="lead">LoadTester runs real load from 4 continents. No account, no subscription. Pay per test, get your PDF report, we forget you.</p>
+
+      <!-- Quick Start: Simple -->
+      <div class="section" id="quick-simple">
+        <h2>Quick Load Test — Quick Start</h2>
+        <p>The fastest way to stress-test a URL. Raw HTTP requests, up to 100,000 per second.</p>
+        <ol>
+          <li>Go to <a href="/test.html?mode=simple">theloadtester.com/test.html</a> and select <strong>Quick Load Test</strong></li>
+          <li>Paste the URL you want to test</li>
+          <li>Choose RPS (requests per second), duration, and regions</li>
+          <li>Complete domain verification (see <a href="#domain-verify">Domain Verification</a>)</li>
+          <li>Pay with USDC or USDT (free tier: no payment needed)</li>
+          <li>Watch live metrics stream in real time</li>
+          <li>Download your PDF report when done</li>
+        </ol>
+        <div class="alert alert-warn">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M8.257 3.099c.765-1.36 2.72-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"/></svg>
+          You must own or be authorized to test the target domain. Domain verification is mandatory for all tests.
+        </div>
+
+        <h3>Free Tier Limits</h3>
+        <table>
+          <tr><th>Parameter</th><th>Free</th><th>Standard ($19.37)</th><th>Heavy ($97.53)</th></tr>
+          <tr><td>RPS</td><td>100</td><td>10,000</td><td>100,000</td></tr>
+          <tr><td>Duration</td><td>1 minute</td><td>10 minutes</td><td>60 minutes</td></tr>
+          <tr><td>Regions</td><td>1</td><td>All 4</td><td>All 4</td></tr>
+        </table>
+      </div>
+
+      <!-- Quick Start: Scenario -->
+      <div class="section" id="quick-scenario">
+        <h2>Scenario Test — Quick Start</h2>
+        <p>Simulate real user journeys through your app using Playwright browser automation.</p>
+        <ol>
+          <li>Go to <a href="/test.html?mode=scenario">theloadtester.com/test.html?mode=scenario</a></li>
+          <li>Create one or more scenarios using Upload, Record, or Visual Builder</li>
+          <li>Each scenario downloads as an encrypted <code>.loadtest</code> file — keep these on your computer</li>
+          <li>Upload your <code>.loadtest</code> files and set the percentage split (must total 100%)</li>
+          <li>Set virtual user count, duration, and regions</li>
+          <li>Complete domain verification</li>
+          <li>Pay and launch — watch 500 real browser instances execute your scenarios simultaneously</li>
+          <li>Download PDF report with per-step timing, bottlenecks, and error screenshots</li>
+        </ol>
+
+        <h3>Scenario Tier Limits</h3>
+        <table>
+          <tr><th>Parameter</th><th>Free</th><th>Standard ($47.21)</th><th>Heavy ($197.53)</th></tr>
+          <tr><td>Virtual browsers</td><td>5</td><td>100</td><td>500</td></tr>
+          <tr><td>Duration</td><td>1 minute</td><td>10 minutes</td><td>60 minutes</td></tr>
+          <tr><td>Regions</td><td>1</td><td>All 4</td><td>All 4</td></tr>
+        </table>
+      </div>
+
+      <!-- Scenario: Upload -->
+      <div class="section" id="scenario-upload">
+        <h2>Create Scenarios — Upload Script</h2>
+        <p>Write or paste a Playwright script. LoadTester runs it in a headless Chromium browser for each virtual user.</p>
+
+        <h3>Script format</h3>
+        <p>Export a single async function that receives a <code>browser</code> instance:</p>
+        <pre><span class="comment">// login-flow.js — example scenario script</span>
+<span class="kw">module</span>.exports = <span class="kw">async</span> <span class="fn">function</span>(browser) {
+  <span class="kw">const</span> page = <span class="kw">await</span> browser.<span class="fn">newPage</span>();
+
+  <span class="comment">// Navigate</span>
+  <span class="kw">await</span> page.<span class="fn">goto</span>(<span class="str">'https://yourapp.com/login'</span>);
+
+  <span class="comment">// Fill form</span>
+  <span class="kw">await</span> page.<span class="fn">fill</span>(<span class="str">'#email'</span>, <span class="str">'load-test@example.com'</span>);
+  <span class="kw">await</span> page.<span class="fn">fill</span>(<span class="str">'#password'</span>, <span class="str">'TestPassword123!'</span>);
+  <span class="kw">await</span> page.<span class="fn">click</span>(<span class="str">'[type="submit"]'</span>);
+
+  <span class="comment">// Wait for navigation</span>
+  <span class="kw">await</span> page.<span class="fn">waitForURL</span>(<span class="str">'**/dashboard'</span>, { timeout: 10000 });
+
+  <span class="comment">// Verify something is on screen</span>
+  <span class="kw">await</span> page.<span class="fn">waitForSelector</span>(<span class="str">'.dashboard-title'</span>);
+
+  <span class="comment">// Screenshot (captured in report)</span>
+  <span class="kw">await</span> page.<span class="fn">screenshot</span>({ path: <span class="str">'dashboard.png'</span> });
+
+  <span class="kw">await</span> page.<span class="fn">close</span>();
+};</pre>
+
+        <h3>Limitations</h3>
+        <ul>
+          <li>Each script runs in an isolated Chromium context — no shared state between virtual users</li>
+          <li>Maximum script execution time: 5 minutes per virtual user iteration</li>
+          <li>No file system access (screenshots go into the report)</li>
+          <li>No network proxies or custom certificates</li>
+          <li>External domains beyond the test target may be blocked</li>
+        </ul>
+      </div>
+
+      <!-- Scenario: Record -->
+      <div class="section" id="scenario-record">
+        <h2>Create Scenarios — Record</h2>
+        <p>Record your interactions with your site. We open it in a real browser and capture every click, fill, and navigation as Playwright steps.</p>
+        <ol>
+          <li>Enter your site's URL and a scenario name</li>
+          <li>Click <strong>Start Recording</strong> — your site opens in a new browser window</li>
+          <li>Click through the user journey you want to simulate</li>
+          <li>When finished, click <strong>Stop Recording</strong></li>
+          <li>Review the captured steps, then click <strong>Download .loadtest</strong></li>
+        </ol>
+        <p>The recording captures: <code>navigate</code>, <code>click</code>, <code>fill</code>, <code>select</code>, <code>check</code>, keyboard events, and page assertions.</p>
+        <div class="alert alert-info">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"/></svg>
+          Use test credentials during recording — they will be baked into the encrypted .loadtest file and replayed by all virtual users.
+        </div>
+      </div>
+
+      <!-- Scenario: Visual -->
+      <div class="section" id="scenario-visual">
+        <h2>Create Scenarios — Visual Builder</h2>
+        <p>Build a scenario step-by-step with no code. Select a step type, fill in the parameters, and click <strong>Add Step</strong>.</p>
+
+        <h3>Available step types</h3>
+        <table>
+          <tr><th>Type</th><th>Parameters</th><th>Description</th></tr>
+          <tr><td><code>navigate</code></td><td>url</td><td>Go to a URL</td></tr>
+          <tr><td><code>click</code></td><td>selector</td><td>Click an element (CSS selector)</td></tr>
+          <tr><td><code>fill</code></td><td>selector, value</td><td>Type text into an input field</td></tr>
+          <tr><td><code>wait</code></td><td>ms</td><td>Pause execution for N milliseconds</td></tr>
+          <tr><td><code>screenshot</code></td><td>filename</td><td>Capture a screenshot (appears in report)</td></tr>
+          <tr><td><code>assert</code></td><td>selector, text</td><td>Verify element contains expected text</td></tr>
+        </table>
+
+        <h3>Example scenario: browse products</h3>
+        <pre>navigate("https://shop.example.com")
+wait(1000)
+click(".products-grid .product-card:first-child")
+wait(500)
+screenshot("product-page")
+assert(".product-title", "Running Shoes")
+click(".add-to-cart")
+navigate("https://shop.example.com/cart")
+assert(".cart-count", "1")</pre>
+      </div>
+
+      <!-- .loadtest format -->
+      <div class="section" id="loadtest-format">
+        <h2>The .loadtest File Format</h2>
+        <p>A <code>.loadtest</code> file is an encrypted binary blob. You keep it — we store nothing. Upload it when you are ready to run the test.</p>
+        <h3>What is inside</h3>
+        <p>The file contains AES-256-GCM encrypted JSON with the following structure:</p>
+        <pre><span class="comment">// Decrypted content (only our servers can read this)</span>
+{
+  <span class="str">"version"</span>: 1,
+  <span class="str">"name"</span>: <span class="str">"Login flow"</span>,
+  <span class="str">"created"</span>: 1712345678000,
+  <span class="str">"type"</span>: <span class="str">"script"</span> <span class="comment">| "visual" | "recorded"</span>,
+  <span class="str">"steps"</span>: [...] <span class="comment">// or "script": "..."</span>
+}</pre>
+        <h3>File layout</h3>
+        <pre><span class="comment"># Binary layout: [IV 12 bytes][Auth Tag 16 bytes][Ciphertext N bytes]</span></pre>
+        <p>The encryption key never leaves our servers. The file is useless without us — that is intentional. We cannot be used as a DDoS relay because only we control when execution happens.</p>
+      </div>
+
+      <!-- Domain verification -->
+      <div class="section" id="domain-verify">
+        <h2>Domain Verification</h2>
+        <p>Before any test runs, you must prove you control the target domain. This prevents LoadTester from being used to attack sites you don't own.</p>
+
+        <h3>How it works</h3>
+        <ol>
+          <li>Start configuring a test — we generate a unique test ID (e.g. <code>lt_a3f9b2c1</code>)</li>
+          <li>Create a file at: <code>/.well-known/loadtester-verify/{test-id}</code></li>
+          <li>File content must be: <code>{test-id}:verified:{year}</code> (shown on the test page)</li>
+          <li>Click <strong>Check Verification</strong> — we fetch the file and confirm ownership</li>
+          <li>Test proceeds to payment</li>
+        </ol>
+
+        <h3>Quick setup examples</h3>
+        <pre><span class="comment"># Bash / any Linux server</span>
+mkdir -p /var/www/html/.well-known/loadtester-verify
+echo <span class="str">"lt_a3f9b2c1:verified:2026"</span> > /var/www/html/.well-known/loadtester-verify/lt_a3f9b2c1
+
+<span class="comment"># nginx — add to server block</span>
+location /.well-known/loadtester-verify/ {
+  root /var/www/html;
+  add_header Content-Type text/plain;
+}
+
+<span class="comment"># Node.js / Express</span>
+app.get(<span class="str">'/.well-known/loadtester-verify/:id'</span>, (req, res) => {
+  res.send(`${req.params.id}:verified:2026`);
+});</pre>
+
+        <h3>Verification TTL</h3>
+        <p>The verification is valid for the duration of the test. After the test ends, you can remove the file. Each new test requires a new verification (new test ID).</p>
+
+        <div class="alert alert-warn">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M8.257 3.099c.765-1.36 2.72-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92z"/></svg>
+          Testing a domain you do not own is a violation of our Terms of Service and potentially illegal. All tests are logged with payer wallet address.
+        </div>
+      </div>
+
+      <!-- Metrics -->
+      <div class="section" id="metrics">
+        <h2>Metrics Explained</h2>
+
+        <h3>Requests Per Second (RPS)</h3>
+        <p>The number of HTTP requests (or browser scenario iterations) completed per second. Reported per-region and as an aggregate. In scenario mode, this counts completed Playwright script executions, not individual page actions.</p>
+
+        <h3>Latency Percentiles</h3>
+        <table>
+          <tr><th>Metric</th><th>Meaning</th><th>Target</th></tr>
+          <tr><td>P50 (median)</td><td>Half of requests are faster than this</td><td>&lt; 200ms for typical APIs</td></tr>
+          <tr><td>P95</td><td>95% of requests complete within this time</td><td>&lt; 500ms for most apps</td></tr>
+          <tr><td>P99</td><td>99% of requests complete within this time. Captures outliers and worst-case</td><td>&lt; 1000ms</td></tr>
+        </table>
+        <p>A large gap between P50 and P99 indicates high variance — some requests are much slower than average, often a sign of database lock contention, GC pauses, or cold cache hits.</p>
+
+        <h3>Error Rate</h3>
+        <p>Percentage of requests that returned a 4xx or 5xx HTTP status code, timed out, or (in scenario mode) failed to complete the Playwright script. Anything above 0.1% under load is worth investigating.</p>
+
+        <h3>Throughput (bytes/sec)</h3>
+        <p>Total bytes transferred from the server to LoadTester per second. Useful for detecting bandwidth bottlenecks.</p>
+
+        <h3>Per-step latency (Scenario mode)</h3>
+        <p>Each Playwright step is timed individually. The PDF report shows a waterfall chart of time spent on: navigation, waiting for elements, form fills, and assertions. This pinpoints exactly which part of your flow is slow.</p>
+      </div>
+
+      <!-- Reports -->
+      <div class="section" id="reports">
+        <h2>PDF Reports</h2>
+        <p>Every test produces a PDF report. Download it immediately when the test completes. We delete all data after the session ends — the PDF is your only record.</p>
+        <h3>What is in the report</h3>
+        <ul>
+          <li>Test configuration summary (URL, RPS/users, duration, regions)</li>
+          <li>Aggregate metrics: total requests, error rate, peak RPS, P50/P95/P99</li>
+          <li>Throughput over time chart (time series)</li>
+          <li>Latency over time chart</li>
+          <li>Per-region breakdown: Americas, Frankfurt, London, Singapore</li>
+          <li>Status code distribution</li>
+          <li><strong>Scenario mode:</strong> Per-step latency waterfall, bottleneck identification, error screenshots</li>
+          <li>Conclusion: pass/fail thresholds if configured, recommendations</li>
+        </ul>
+      </div>
+
+      <!-- API Reference -->
+      <div class="section" id="api">
+        <h2>API Reference</h2>
+        <p>Integrate LoadTester into your CI/CD pipeline. All endpoints accept and return JSON. Authentication via <code>X-LoadTester-Key</code> header (contact us for API access keys).</p>
+
+        <h3>Base URL</h3>
+        <pre>https://api.theloadtester.com</pre>
+
+        <table>
+          <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+          <tr><td><span class="method post">POST</span></td><td><code>/api/create-scenario</code></td><td>Encrypt Playwright steps → .loadtest file</td></tr>
+          <tr><td><span class="method post">POST</span></td><td><code>/api/record-start</code></td><td>Start a browser recording session</td></tr>
+          <tr><td><span class="method post">POST</span></td><td><code>/api/record-stop/:sessionId</code></td><td>Stop recording, returns captured steps</td></tr>
+          <tr><td><span class="method post">POST</span></td><td><code>/api/simple-test</code></td><td>Start a simple HTTP load test</td></tr>
+          <tr><td><span class="method post">POST</span></td><td><code>/api/scenario-test</code></td><td>Start a scenario test</td></tr>
+          <tr><td><span class="method get">GET</span></td><td><code>/api/test/:id/stream</code></td><td>SSE stream of live metrics</td></tr>
+          <tr><td><span class="method get">GET</span></td><td><code>/api/test/:id/report</code></td><td>Download PDF report</td></tr>
+          <tr><td><span class="method post">POST</span></td><td><code>/api/verify-domain</code></td><td>Check domain verification file</td></tr>
+        </table>
+
+        <h3>POST /api/simple-test</h3>
+        <pre>{
+  <span class="str">"url"</span>: <span class="str">"https://api.example.com/health"</span>,
+  <span class="str">"rps"</span>: 10000,
+  <span class="str">"duration"</span>: 600,
+  <span class="str">"regions"</span>: [<span class="str">"americas"</span>, <span class="str">"europe-de"</span>, <span class="str">"europe-uk"</span>, <span class="str">"asia"</span>],
+  <span class="str">"testId"</span>: <span class="str">"lt_a3f9b2c1"</span>
+}
+
+<span class="comment">// Response:</span>
+{ <span class="str">"id"</span>: <span class="str">"lt_a3f9b2c1"</span>, <span class="str">"status"</span>: <span class="str">"running"</span>, <span class="str">"streamUrl"</span>: <span class="str">"/api/test/lt_a3f9b2c1/stream"</span> }</pre>
+
+        <h3>GET /api/test/:id/stream (SSE)</h3>
+        <pre><span class="comment"># Each event data is JSON:</span>
+{
+  <span class="str">"rps"</span>: 9823,
+  <span class="str">"p50"</span>: 48,
+  <span class="str">"p95"</span>: 134,
+  <span class="str">"p99"</span>: 289,
+  <span class="str">"errRate"</span>: 0.003,
+  <span class="str">"elapsed"</span>: 45,
+  <span class="str">"duration"</span>: 600,
+  <span class="str">"regions"</span>: {
+    <span class="str">"americas"</span>: { <span class="str">"rps"</span>: 3950, <span class="str">"latency"</span>: 42 },
+    <span class="str">"europe-de"</span>: { <span class="str">"rps"</span>: 1980, <span class="str">"latency"</span>: 61 },
+    <span class="str">"europe-uk"</span>: { <span class="str">"rps"</span>: 2010, <span class="str">"latency"</span>: 67 },
+    <span class="str">"asia"</span>: { <span class="str">"rps"</span>: 1883, <span class="str">"latency"</span>: 95 }
+  }
+}</pre>
+      </div>
+
+      <!-- curl -->
+      <div class="section" id="curl">
+        <h2>curl Examples</h2>
+
+        <h3>Verify domain</h3>
+        <pre>curl -X POST https://api.theloadtester.com/api/verify-domain \
+  -H "Content-Type: application/json" \
+  -d '{"testId":"lt_a3f9b2c1","verifyUrl":"https://yoursite.com/.well-known/loadtester-verify/lt_a3f9b2c1"}'</pre>
+
+        <h3>Start a simple test (free tier)</h3>
+        <pre>curl -X POST https://api.theloadtester.com/api/simple-test \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://api.example.com/health",
+    "rps": 100,
+    "duration": 60,
+    "regions": ["americas"],
+    "testId": "lt_a3f9b2c1"
+  }'</pre>
+
+        <h3>Stream results</h3>
+        <pre>curl -N https://api.theloadtester.com/api/test/lt_a3f9b2c1/stream</pre>
+
+        <h3>Download report</h3>
+        <pre>curl -o report.pdf https://api.theloadtester.com/api/test/lt_a3f9b2c1/report</pre>
+      </div>
+
+      <!-- GitHub Actions -->
+      <div class="section" id="github-actions">
+        <h2>GitHub Actions Integration</h2>
+        <pre><span class="comment"># .github/workflows/load-test.yml</span>
+name: Load Test on Deploy
+
+on:
+  workflow_run:
+    workflows: [<span class="str">"Deploy to Production"</span>]
+    types: [completed]
+
+jobs:
+  load-test:
+    runs-on: ubuntu-latest
+    <span class="kw">if</span>: github.event.workflow_run.conclusion == <span class="str">'success'</span>
+    steps:
+      - name: Setup verification file
+        run: |
+          TEST_ID=<span class="str">"lt_ci_$(date +%s)"</span>
+          echo <span class="str">"$TEST_ID"</span> > /tmp/test_id
+          <span class="comment"># Deploy verification file to your server</span>
+          ssh user@yourserver.com \
+            <span class="str">"echo '$TEST_ID:verified:2026' > /var/www/.well-known/loadtester-verify/$TEST_ID"</span>
+
+      - name: Verify domain
+        run: |
+          TEST_ID=$(cat /tmp/test_id)
+          curl -f -X POST https://api.theloadtester.com/api/verify-domain \
+            -H "Content-Type: application/json" \
+            -d "{\"testId\":\"$TEST_ID\",\"verifyUrl\":\"https://yoursite.com/.well-known/loadtester-verify/$TEST_ID\"}"
+
+      - name: Start load test
+        run: |
+          TEST_ID=$(cat /tmp/test_id)
+          curl -f -X POST https://api.theloadtester.com/api/simple-test \
+            -H "Content-Type: application/json" \
+            -d "{\"url\":\"https://yoursite.com/api/health\",\"rps\":100,\"duration\":60,\"regions\":[\"americas\"],\"testId\":\"$TEST_ID\"}"
+
+      - name: Wait and download report
+        run: |
+          sleep 75
+          TEST_ID=$(cat /tmp/test_id)
+          curl -o load-test-report.pdf \
+            https://api.theloadtester.com/api/test/$TEST_ID/report
+
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-test-report
+          path: load-test-report.pdf</pre>
+      </div>
+
+      <!-- GitLab CI -->
+      <div class="section" id="gitlab-ci">
+        <h2>GitLab CI Integration</h2>
+        <pre><span class="comment"># .gitlab-ci.yml — add after deploy stage</span>
+load-test:
+  stage: verify
+  needs: [deploy]
+  script:
+    - export TEST_ID="lt_ci_$(date +%s)"
+    <span class="comment"># Serve verification file on your target</span>
+    - ssh user@server "echo '$TEST_ID:verified:2026' > /var/www/.well-known/loadtester-verify/$TEST_ID"
+    <span class="comment"># Verify ownership</span>
+    - |
+      curl -f -X POST https://api.theloadtester.com/api/verify-domain \
+        -H <span class="str">"Content-Type: application/json"</span> \
+        -d "{\"testId\":\"$TEST_ID\",\"verifyUrl\":\"https://yoursite.com/.well-known/loadtester-verify/$TEST_ID\"}"
+    <span class="comment"># Start test</span>
+    - |
+      curl -f -X POST https://api.theloadtester.com/api/simple-test \
+        -H <span class="str">"Content-Type: application/json"</span> \
+        -d "{\"url\":\"https://yoursite.com\",\"rps\":100,\"duration\":60,\"regions\":[\"americas\"],\"testId\":\"$TEST_ID\"}"
+    - sleep 75
+    - curl -o report.pdf "https://api.theloadtester.com/api/test/$TEST_ID/report"
+  artifacts:
+    paths:
+      - report.pdf
+    expire_in: 7 days</pre>
+      </div>
+
+      <!-- Playwright guide -->
+      <div class="section" id="playwright-guide">
+        <h2>Playwright Script Guide</h2>
+        <h3>Supported Playwright APIs</h3>
+        <ul>
+          <li><code>page.goto(url, options)</code> — Navigate to a URL</li>
+          <li><code>page.click(selector, options)</code> — Click an element</li>
+          <li><code>page.fill(selector, value)</code> — Fill an input</li>
+          <li><code>page.type(selector, text)</code> — Type character by character</li>
+          <li><code>page.selectOption(selector, value)</code> — Select dropdown option</li>
+          <li><code>page.waitForSelector(selector, options)</code> — Wait for element</li>
+          <li><code>page.waitForURL(url, options)</code> — Wait for navigation</li>
+          <li><code>page.waitForTimeout(ms)</code> — Pause</li>
+          <li><code>page.screenshot(options)</code> — Capture screenshot</li>
+          <li><code>page.evaluate(fn)</code> — Run JavaScript in page context</li>
+          <li><code>expect(page).toHaveURL(url)</code> — Assert URL</li>
+          <li><code>expect(locator).toHaveText(text)</code> — Assert text</li>
+        </ul>
+        <h3>Best practices for load test scripts</h3>
+        <ul>
+          <li>Use dedicated test accounts — not production data</li>
+          <li>Add <code>waitForSelector</code> after navigation instead of fixed delays</li>
+          <li>Keep scripts under 2 minutes per iteration for best results</li>
+          <li>Add <code>screenshot()</code> calls at key steps — they appear in error reports</li>
+          <li>Handle expected redirects with <code>waitForURL</code></li>
+          <li>Do not use hardcoded <code>sleep</code> calls — use Playwright's built-in waits</li>
+        </ul>
+      </div>
+
+      <!-- Regions -->
+      <div class="section" id="regions">
+        <h2>Regions</h2>
+        <table>
+          <tr><th>ID</th><th>Location</th><th>Coverage</th></tr>
+          <tr><td><code>americas</code></td><td>Eastern United States</td><td>North &amp; South America</td></tr>
+          <tr><td><code>europe-de</code></td><td>Frankfurt, Germany</td><td>Central Europe</td></tr>
+          <tr><td><code>europe-uk</code></td><td>London, United Kingdom</td><td>Western Europe</td></tr>
+          <tr><td><code>asia</code></td><td>Singapore</td><td>Asia-Pacific</td></tr>
+        </table>
+        <p>Free tier tests run from <code>americas</code> only. Paid tiers run all selected regions simultaneously, with traffic split evenly across regions.</p>
+      </div>
+
+      <!-- Pricing ref -->
+      <div class="section" id="pricing-ref">
+        <h2>Pricing Reference</h2>
+        <h3>Simple Mode (raw HTTP)</h3>
+        <table>
+          <tr><th>Tier</th><th>RPS</th><th>Duration</th><th>Regions</th><th>Price</th></tr>
+          <tr><td>Free</td><td>100</td><td>1 min</td><td>1</td><td>$0</td></tr>
+          <tr><td>Standard</td><td>10,000</td><td>10 min</td><td>All 4</td><td>$19.37</td></tr>
+          <tr><td>Heavy</td><td>100,000</td><td>60 min</td><td>All 4</td><td>$97.53</td></tr>
+        </table>
+        <h3>Scenario Mode (Playwright browsers)</h3>
+        <table>
+          <tr><th>Tier</th><th>Virtual Users</th><th>Duration</th><th>Regions</th><th>Price</th></tr>
+          <tr><td>Free</td><td>5</td><td>1 min</td><td>1</td><td>$0</td></tr>
+          <tr><td>Standard</td><td>100</td><td>10 min</td><td>All 4</td><td>$47.21</td></tr>
+          <tr><td>Heavy</td><td>500</td><td>60 min</td><td>All 4</td><td>$197.53</td></tr>
+        </table>
+        <p>All payments in USDC or USDT on Demo L2 (chain ID 845302). Non-refundable. No subscriptions, no recurring charges.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer style="border-top:1px solid var(--border);padding:32px 24px;text-align:center;">
+    <p style="font-size:0.82rem;color:#9ca3af;">
+      © 2026 LoadTester &nbsp;·&nbsp;
+      <a href="/" style="color:#9ca3af;">Home</a> &nbsp;·&nbsp;
+      <a href="/terms.html" style="color:#9ca3af;">Terms</a> &nbsp;·&nbsp;
+      <a href="/test.html" style="color:var(--red);">Start Testing →</a>
+    </p>
+  </footer>
+</body>
+</html>

@@ -1,321 +1,590 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LoadTester — Distributed Load Testing from 4 Continents</title>
-  <meta name="description" content="Load test your APIs with real-world traffic from Canada, Singapore, Frankfurt, and the UK simultaneously. Pay per test, not per month." />
-  <meta name="keywords" content="load testing, distributed load test, API load test, performance testing, stress testing, multi-region load test, pay per test, k6 alternative, load testing API">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LoadTester — Break Your App Before Users Do</title>
+  <meta name="description" content="Load test from 4 continents. Raw HTTP or real browser scenarios. Pay per test, no account needed. 100K RPS or 500 virtual browsers.">
+  <meta name="keywords" content="load testing, stress testing, performance testing, distributed load test, playwright load test, API load test, 100K RPS, browser testing, pay per test">
   <link rel="canonical" href="https://theloadtester.com/">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F680;</text></svg>">
-  <!-- Open Graph -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23dc2626'/%3E%3Ccircle cx='16' cy='17' r='8' stroke='white' stroke-width='2' fill='none'/%3E%3Cpath d='M16 17 L22 11' stroke='white' stroke-width='2.5' stroke-linecap='round'/%3E%3Cpath d='M10 17 A6 6 0 0 1 22 17' stroke='white' stroke-width='1.5' fill='none'/%3E%3C/svg%3E">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://theloadtester.com/">
-  <meta property="og:title" content="LoadTester — Distributed Load Testing from 4 Continents">
-  <meta property="og:description" content="Load test your APIs with real-world traffic from 4 continents simultaneously. Pay per test, not per month.">
-  <meta property="og:image" content="https://theloadtester.com/og-image.png">
-  <!-- Twitter Card -->
+  <meta property="og:title" content="LoadTester — Break Your App Before Users Do">
+  <meta property="og:description" content="Load test from 4 continents. Raw HTTP or real Playwright browser scenarios. No account needed.">
+  <meta property="og:site_name" content="LoadTester">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="LoadTester — Distributed Load Testing from 4 Continents">
-  <meta name="twitter:description" content="Load test your APIs with real-world traffic from 4 continents simultaneously. Pay per test, not per month.">
-  <meta name="twitter:image" content="https://theloadtester.com/og-image.png">
-  <!-- JSON-LD -->
+  <meta name="twitter:title" content="LoadTester — Break Your App Before Users Do">
+  <meta name="twitter:description" content="Load test from 4 continents. Raw HTTP or real browser scenarios. Pay per test.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "LoadTester",
-    "description": "Distributed load testing from 4 continents. Generate real-world traffic from Canada, Singapore, Frankfurt, and the UK simultaneously.",
+    "description": "Distributed load testing from 4 continents. Raw HTTP hammer or real Playwright browser scenarios.",
     "url": "https://theloadtester.com",
     "applicationCategory": "DeveloperApplication",
     "operatingSystem": "Any",
     "offers": [
-      { "@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "USD", "description": "100 RPS, 1 minute, 1 location" },
-      { "@type": "Offer", "name": "Pro", "price": "20", "priceCurrency": "USD", "description": "10,000 RPS, 10 minutes, all 4 locations" },
-      { "@type": "Offer", "name": "Business", "price": "100", "priceCurrency": "USD", "description": "100,000 RPS, 60 minutes, all 4 locations" }
+      { "@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "USD", "description": "100 RPS, 1 minute, 1 region" },
+      { "@type": "Offer", "name": "Standard", "price": "19.37", "priceCurrency": "USD", "description": "10K RPS, 10 minutes, all 4 regions" },
+      { "@type": "Offer", "name": "Heavy", "price": "97.53", "priceCurrency": "USD", "description": "100K RPS, 60 minutes, all 4 regions" }
     ]
   }
   </script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #ffffff; --fg: #111827; --muted: #6b7280; --accent: #7c3aed;
-      --accent-light: #ede9fe; --border: #e5e7eb; --card-bg: #f9fafb;
-      --green: #10b981; --red: #ef4444; --yellow: #f59e0b;
-      --radius: 12px; --max-w: 1100px;
+      --red: #dc2626;
+      --red-hover: #b91c1c;
+      --red-light: #fef2f2;
+      --red-glow: rgba(220, 38, 38, 0.06);
+      --text: #111827;
+      --text-secondary: #4b5563;
+      --bg: #ffffff;
+      --bg-alt: #f9fafb;
+      --border: #e5e7eb;
+      --green: #16a34a;
+      --radius: 10px;
     }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: var(--fg); background: var(--bg); line-height: 1.6; }
-    a { color: var(--accent); text-decoration: none; }
-    a:hover { text-decoration: underline; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+    code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
+    a { color: inherit; text-decoration: none; }
+    .container { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
 
-    nav { display: flex; justify-content: space-between; align-items: center; max-width: var(--max-w); margin: 0 auto; padding: 1.5rem 2rem; }
-    nav .logo { font-size: 1.4rem; font-weight: 700; color: var(--fg); }
-    nav .links { display: flex; gap: 2rem; align-items: center; }
-    nav .links a { color: var(--muted); font-size: 0.95rem; }
-    .btn { display: inline-block; padding: 0.65rem 1.5rem; border-radius: 8px; font-weight: 600; font-size: 0.95rem; border: none; cursor: pointer; transition: all 0.2s; }
-    .btn-primary { background: var(--accent); color: #fff; }
-    .btn-primary:hover { background: #6d28d9; text-decoration: none; }
-    .btn-outline { border: 2px solid var(--border); color: var(--fg); background: transparent; }
+    /* Nav */
+    nav { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+    nav .inner { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; }
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.25rem; letter-spacing: -0.5px; }
+    .logo svg { width: 32px; height: 32px; }
+    .nav-links { display: flex; align-items: center; gap: 28px; font-size: 0.9rem; font-weight: 500; color: var(--text-secondary); }
+    .nav-links a:hover { color: var(--text); }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 22px; border-radius: var(--radius); font-weight: 600; font-size: 0.9rem; transition: all 0.2s; cursor: pointer; border: none; text-decoration: none; }
+    .btn-primary { background: var(--red); color: #fff; }
+    .btn-primary:hover { background: var(--red-hover); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(220,38,38,0.3); }
+    .btn-outline { border: 1.5px solid var(--border); color: var(--text-secondary); background: transparent; }
+    .btn-outline:hover { border-color: var(--red); color: var(--red); }
+    .btn-lg { padding: 14px 32px; font-size: 1rem; border-radius: 12px; }
 
-    .hero { text-align: center; padding: 5rem 2rem 4rem; max-width: 800px; margin: 0 auto; }
-    .hero h1 { font-size: 3rem; font-weight: 800; line-height: 1.15; margin-bottom: 1.5rem; }
-    .hero h1 span { color: var(--accent); }
-    .hero p { font-size: 1.25rem; color: var(--muted); margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto; }
-    .hero-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    /* Hero */
+    .hero { padding: 88px 0 32px; text-align: center; position: relative; overflow: hidden; }
+    .hero::before { content: ''; position: absolute; top: -60%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle at 50% 40%, var(--red-glow) 0%, transparent 55%); pointer-events: none; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: var(--red-light); color: var(--red); border: 1px solid rgba(220,38,38,0.2); border-radius: 100px; padding: 6px 14px; font-size: 0.8rem; font-weight: 600; margin-bottom: 28px; }
+    .hero h1 { font-size: clamp(2.8rem, 6.5vw, 4.5rem); font-weight: 800; letter-spacing: -2px; line-height: 1.08; margin-bottom: 22px; position: relative; color: var(--text); }
+    .hero h1 .accent { color: var(--red); }
+    .hero p { font-size: 1.15rem; color: var(--text-secondary); max-width: 560px; margin: 0 auto 36px; line-height: 1.7; }
+    .hero-buttons { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; }
+    .hero-note { font-size: 0.8rem; color: var(--text-secondary); }
 
-    .regions { display: flex; justify-content: center; gap: 2rem; padding: 2rem; flex-wrap: wrap; }
-    .region-tag { padding: 0.5rem 1.2rem; background: var(--accent-light); color: var(--accent); border-radius: 20px; font-size: 0.9rem; font-weight: 600; }
+    /* Stats */
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin: 40px 0 72px; }
+    .stat { background: var(--bg); padding: 28px; text-align: center; }
+    .stat-value { font-size: 2rem; font-weight: 800; color: var(--text); letter-spacing: -1px; }
+    .stat-value .unit { font-size: 1rem; font-weight: 600; color: var(--text-secondary); }
+    .stat-label { font-size: 0.78rem; color: var(--text-secondary); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 500; }
 
-    .features { max-width: var(--max-w); margin: 0 auto; padding: 4rem 2rem; }
-    .features h2 { text-align: center; font-size: 2rem; margin-bottom: 3rem; }
-    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
-    .feature-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 2rem; }
-    .feature-card h3 { font-size: 1.15rem; margin-bottom: 0.75rem; }
-    .feature-card p { color: var(--muted); font-size: 0.95rem; }
+    /* Sections */
+    .section { padding: 80px 0; }
+    .section-label { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--red); margin-bottom: 12px; }
+    .section-title { font-size: 2.2rem; font-weight: 800; margin-bottom: 14px; letter-spacing: -0.8px; color: var(--text); line-height: 1.2; }
+    .section-sub { color: var(--text-secondary); font-size: 1.05rem; max-width: 600px; line-height: 1.7; }
+    .section-sub.centered { text-align: center; margin: 0 auto 56px; }
+    .text-center { text-align: center; }
 
-    .how-it-works { max-width: var(--max-w); margin: 0 auto; padding: 4rem 2rem; }
-    .how-it-works h2 { text-align: center; font-size: 2rem; margin-bottom: 3rem; }
-    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; }
-    .step { text-align: center; padding: 1.5rem; }
-    .step-num { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 50%; background: var(--accent-light); color: var(--accent); font-weight: 700; font-size: 1.2rem; margin-bottom: 1rem; }
-    .step h3 { font-size: 1.05rem; margin-bottom: 0.5rem; }
-    .step p { color: var(--muted); font-size: 0.9rem; }
+    /* Modes */
+    .modes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 48px; }
+    .mode-card { background: var(--bg); border: 1.5px solid var(--border); border-radius: 16px; padding: 36px; transition: all 0.2s; position: relative; overflow: hidden; }
+    .mode-card:hover { border-color: var(--red); box-shadow: 0 8px 32px rgba(220,38,38,0.08); transform: translateY(-2px); }
+    .mode-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--red); transform: scaleX(0); transition: transform 0.2s; }
+    .mode-card:hover::before { transform: scaleX(1); }
+    .mode-icon { width: 48px; height: 48px; background: var(--red-light); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+    .mode-title { font-size: 1.35rem; font-weight: 700; margin-bottom: 10px; color: var(--text); }
+    .mode-desc { color: var(--text-secondary); font-size: 0.93rem; line-height: 1.7; margin-bottom: 24px; }
+    .mode-features { list-style: none; margin-bottom: 28px; }
+    .mode-features li { font-size: 0.88rem; color: var(--text-secondary); padding: 5px 0; display: flex; align-items: center; gap: 10px; }
+    .mode-features li::before { content: ''; width: 16px; height: 16px; flex-shrink: 0; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23dc2626'%3E%3Cpath d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z'/%3E%3C/svg%3E") no-repeat center; }
+    .mode-price { font-size: 0.82rem; color: var(--text-secondary); background: var(--bg-alt); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin-bottom: 20px; }
+    .mode-price strong { color: var(--text); }
 
-    .pricing { max-width: var(--max-w); margin: 0 auto; padding: 4rem 2rem; }
-    .pricing h2 { text-align: center; font-size: 2rem; margin-bottom: 0.5rem; }
-    .pricing .subtitle { text-align: center; color: var(--muted); margin-bottom: 3rem; }
-    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; }
-    .price-card { border: 2px solid var(--border); border-radius: var(--radius); padding: 2.5rem 2rem; text-align: center; transition: border-color 0.2s; }
-    .price-card.featured { border-color: var(--accent); position: relative; }
-    .price-card.featured::before { content: 'Best Value'; position: absolute; top: -14px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #fff; padding: 0.2rem 1rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
-    .price-card h3 { font-size: 1.3rem; margin-bottom: 0.5rem; }
-    .price-card .price { font-size: 2.5rem; font-weight: 800; margin: 1rem 0 0.25rem; }
-    .price-card .price span { font-size: 1rem; font-weight: 400; color: var(--muted); }
-    .price-card .price-note { color: var(--muted); font-size: 0.85rem; margin-bottom: 1.5rem; }
-    .price-card ul { list-style: none; text-align: left; margin-bottom: 2rem; }
-    .price-card ul li { padding: 0.4rem 0; font-size: 0.95rem; color: var(--muted); }
-    .price-card ul li::before { content: '\2713'; color: var(--green); font-weight: 700; margin-right: 0.5rem; }
+    /* How it works */
+    .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 32px; margin-top: 48px; }
+    .step { display: flex; flex-direction: column; }
+    .step-num { width: 40px; height: 40px; background: var(--red); color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; margin-bottom: 16px; flex-shrink: 0; }
+    .step-title { font-weight: 700; font-size: 1rem; margin-bottom: 8px; color: var(--text); }
+    .step-desc { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6; }
 
-    .api-example { max-width: var(--max-w); margin: 0 auto; padding: 4rem 2rem; }
-    .api-example h2 { text-align: center; font-size: 2rem; margin-bottom: 2rem; }
-    .code-block { background: #1f2937; color: #e5e7eb; border-radius: var(--radius); padding: 2rem; overflow-x: auto; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.9rem; line-height: 1.7; }
-    .code-block .comment { color: #6b7280; }
-    .code-block .string { color: #34d399; }
+    /* Regions */
+    .regions-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 40px; }
+    .region-card { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; display: flex; align-items: center; gap: 16px; }
+    .region-flag { font-size: 2rem; }
+    .region-name { font-weight: 700; font-size: 0.95rem; color: var(--text); }
+    .region-detail { font-size: 0.82rem; color: var(--text-secondary); margin-top: 2px; }
+    .region-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); margin-left: auto; flex-shrink: 0; box-shadow: 0 0 0 3px rgba(22,163,74,0.15); }
 
-    .comparison { max-width: var(--max-w); margin: 0 auto; padding: 4rem 2rem; }
-    .comparison h2 { text-align: center; font-size: 2rem; margin-bottom: 2rem; }
-    .comparison table { width: 100%; border-collapse: collapse; }
-    .comparison th, .comparison td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
-    .comparison th { font-weight: 600; background: var(--card-bg); }
-    .comparison td:first-child { font-weight: 600; }
-    .highlight-row { background: var(--accent-light); }
+    /* Pricing */
+    .pricing-tabs { display: flex; gap: 8px; justify-content: center; margin-bottom: 36px; }
+    .pricing-tab { padding: 8px 20px; border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; border: 1.5px solid var(--border); color: var(--text-secondary); background: var(--bg); transition: all 0.2s; }
+    .pricing-tab.active { background: var(--red); color: #fff; border-color: var(--red); }
+    .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .price-card { background: var(--bg); border: 1.5px solid var(--border); border-radius: 16px; padding: 32px 28px; position: relative; }
+    .price-card.featured { border-color: var(--red); box-shadow: 0 0 0 1px var(--red), 0 8px 32px rgba(220,38,38,0.08); }
+    .price-card.featured::before { content: 'Most popular'; position: absolute; top: -12px; left: 28px; background: var(--red); color: #fff; font-size: 0.72rem; font-weight: 700; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .price-name { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin-bottom: 12px; }
+    .price-amount { font-size: 2.6rem; font-weight: 800; letter-spacing: -1.5px; color: var(--text); margin-bottom: 4px; }
+    .price-amount .currency { font-size: 1.2rem; font-weight: 600; vertical-align: top; margin-top: 8px; display: inline-block; }
+    .price-per { font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 20px; }
+    .price-features { list-style: none; margin-bottom: 28px; }
+    .price-features li { padding: 7px 0; font-size: 0.88rem; color: var(--text-secondary); display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); }
+    .price-features li:last-child { border-bottom: none; }
+    .price-features li::before { content: ''; width: 16px; height: 16px; flex-shrink: 0; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23dc2626'%3E%3Cpath d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z'/%3E%3C/svg%3E") no-repeat center; }
+    .pricing-grid-hidden { display: none; }
 
-    footer { border-top: 1px solid var(--border); padding: 2rem; text-align: center; color: var(--muted); font-size: 0.85rem; }
+    /* Domain verification */
+    .verify-box { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 16px; padding: 36px; }
+    .verify-step { display: flex; gap: 16px; margin-bottom: 24px; }
+    .verify-step:last-child { margin-bottom: 0; }
+    .verify-step-num { width: 28px; height: 28px; background: var(--red); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+    .verify-step-content h4 { font-weight: 600; font-size: 0.95rem; margin-bottom: 6px; }
+    .verify-step-content p { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6; }
+    .code-block { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 14px 18px; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; margin-top: 10px; overflow-x: auto; }
+    .code-block .comment { color: #64748b; }
+    .code-block .str { color: #86efac; }
+    .code-block .kw { color: #93c5fd; }
 
-    @media (max-width: 640px) {
-      .hero h1 { font-size: 2rem; }
-      nav .links { gap: 1rem; }
+    /* CTA */
+    .cta-section { background: linear-gradient(135deg, #fef2f2 0%, #fff1f2 100%); border: 1px solid rgba(220,38,38,0.15); border-radius: 20px; padding: 64px 48px; text-align: center; margin: 80px 0; }
+    .cta-section h2 { font-size: 2rem; font-weight: 800; letter-spacing: -0.8px; margin-bottom: 14px; color: var(--text); }
+    .cta-section p { color: var(--text-secondary); font-size: 1.05rem; margin-bottom: 32px; max-width: 500px; margin-left: auto; margin-right: auto; }
+
+    /* Footer */
+    footer { border-top: 1px solid var(--border); padding: 40px 0; }
+    footer .inner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+    footer .links { display: flex; gap: 24px; font-size: 0.85rem; color: var(--text-secondary); }
+    footer .links a:hover { color: var(--text); }
+    footer .copy { font-size: 0.8rem; color: #9ca3af; }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .modes-grid { grid-template-columns: 1fr; }
+      .regions-grid { grid-template-columns: 1fr; }
+      .pricing-grid { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .hero { padding: 60px 0 20px; }
+      .cta-section { padding: 40px 24px; }
     }
   </style>
 </head>
 <body>
 
-<nav>
-  <div class="logo">LoadTester</div>
-  <div class="links">
-    <a href="#features">Features</a>
-    <a href="#pricing">Pricing</a>
-    <a href="#api">API</a>
-    <a href="dashboard.html">Dashboard</a>
-    <a href="#pricing" class="btn btn-primary">Run a Test</a>
-  </div>
-</nav>
+  <nav>
+    <div class="container inner">
+      <a href="/" class="logo">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="32" rx="6" fill="#dc2626"/>
+          <circle cx="16" cy="18" r="7" stroke="white" stroke-width="2" fill="none"/>
+          <path d="M16 18 L21 13" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M10 18 A6 6 0 0 1 22 18" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <circle cx="16" cy="18" r="1.5" fill="white"/>
+        </svg>
+        <span><span style="color:var(--text)">Load</span><span style="color:var(--red)">Tester</span></span>
+      </a>
+      <div class="nav-links">
+        <a href="#how-it-works">How It Works</a>
+        <a href="#pricing">Pricing</a>
+        <a href="/docs.html">Docs</a>
+        <a href="/terms.html">Terms</a>
+      </div>
+      <a href="/test.html" class="btn btn-primary">Start Testing</a>
+    </div>
+  </nav>
 
-<section class="hero">
-  <h1>Load test from <span>4 continents</span> simultaneously</h1>
-  <p>Your CDN says it's fast. Is it really? Generate real-world traffic from around the globe and find out. Pay per test, not per month.</p>
-  <div class="hero-btns">
-    <a href="#pricing" class="btn btn-primary">Start Free Test</a>
-    <a href="#api" class="btn btn-outline">API Documentation</a>
-  </div>
-</section>
+  <main>
+    <!-- Hero -->
+    <section class="hero" id="top">
+      <div class="container">
+        <div class="hero-badge">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><circle cx="6" cy="6" r="6"/></svg>
+          Live from 4 continents
+        </div>
+        <h1>Break your app<br>before <span class="accent">users do</span></h1>
+        <p>Raw HTTP hammer or real Playwright browser scenarios. No account, no key, no storage. Pay per test, get your report, walk away.</p>
+        <div class="hero-buttons">
+          <a href="/test.html?mode=simple" class="btn btn-primary btn-lg">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            Quick Load Test
+          </a>
+          <a href="/test.html?mode=scenario" class="btn btn-outline btn-lg">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            Scenario Test
+          </a>
+        </div>
+        <p class="hero-note">No account needed &nbsp;·&nbsp; Domain verification required &nbsp;·&nbsp; Pay with USDC/USDT</p>
+      </div>
+    </section>
 
-<div class="regions">
-  <div class="region-tag">Canada</div>
-  <div class="region-tag">Frankfurt</div>
-  <div class="region-tag">Singapore</div>
-  <div class="region-tag">United Kingdom</div>
-</div>
+    <!-- Stats -->
+    <div class="container">
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-value">4</div>
+          <div class="stat-label">Continents</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">100<span class="unit">K</span></div>
+          <div class="stat-label">Max RPS</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">500</div>
+          <div class="stat-label">Virtual Browsers</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">0</div>
+          <div class="stat-label">Data Stored</div>
+        </div>
+      </div>
+    </div>
 
-<section class="features" id="features">
-  <h2>Real Traffic, Real Results</h2>
-  <div class="features-grid">
-    <div class="feature-card">
-      <h3>Distributed by Default</h3>
-      <p>Every test fires from multiple continents. See how your app handles traffic from Asia, Europe, and North America at the same time.</p>
-    </div>
-    <div class="feature-card">
-      <h3>Real-Time Metrics</h3>
-      <p>Watch P50, P95, P99 latency, error rates, and throughput stream in real-time as your test runs. Identify bottlenecks instantly.</p>
-    </div>
-    <div class="feature-card">
-      <h3>Pay Per Test</h3>
-      <p>No monthly subscription. Run a test when you need it, pay only for what you use. Starting at $0 for the free tier.</p>
-    </div>
-    <div class="feature-card">
-      <h3>Domain Verification</h3>
-      <p>Built-in anti-DDoS protection. You must prove you own the domain before any load is generated. Responsible by design.</p>
-    </div>
-    <div class="feature-card">
-      <h3>CI/CD Ready</h3>
-      <p>Integrate into your deployment pipeline. Run performance tests automatically before every release via our REST API.</p>
-    </div>
-    <div class="feature-card">
-      <h3>Pay by Card or USDC</h3>
-      <p>Visa, Mastercard, and USDC accepted. No crypto wallet needed &mdash; pay with your regular credit card. No auto-renewals.</p>
-    </div>
-  </div>
-</section>
+    <!-- Two Modes -->
+    <section class="section">
+      <div class="container">
+        <div class="section-label">Two ways to test</div>
+        <h2 class="section-title">Choose your weapon</h2>
+        <p class="section-sub">Raw HTTP speed or realistic user simulation. Both run from 4 continents simultaneously, stream live metrics, and deliver a PDF report when done.</p>
+        <div class="modes-grid">
+          <div class="mode-card">
+            <div class="mode-icon">
+              <svg width="24" height="24" fill="none" stroke="#dc2626" stroke-width="2.5" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </div>
+            <div class="mode-title">Quick Load Test</div>
+            <p class="mode-desc">Paste a URL. We hammer it with real HTTP traffic from up to 4 continents at up to 100,000 requests per second. See latency percentiles, error rates, and throughput in real time.</p>
+            <ul class="mode-features">
+              <li>Up to 100,000 RPS sustained</li>
+              <li>Latency p50 / p95 / p99 per region</li>
+              <li>Per-second streaming metrics</li>
+              <li>Status code distribution</li>
+              <li>PDF report with graphs</li>
+            </ul>
+            <div class="mode-price">Free tier: <strong>100 RPS · 1 minute · 1 region · $0</strong></div>
+            <a href="/test.html?mode=simple" class="btn btn-primary" style="width:100%">Start Quick Test →</a>
+          </div>
+          <div class="mode-card">
+            <div class="mode-icon">
+              <svg width="24" height="24" fill="none" stroke="#dc2626" stroke-width="2.5" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            </div>
+            <div class="mode-title">Scenario Test</div>
+            <p class="mode-desc">Simulate real users clicking through your app with Playwright. Upload a script, record your own journey, or build steps visually. Each scenario is saved as an encrypted <code>.loadtest</code> file — you keep it, we forget it.</p>
+            <ul class="mode-features">
+              <li>Upload Playwright scripts or record live</li>
+              <li>Visual step builder (no code needed)</li>
+              <li>Up to 500 virtual browsers at once</li>
+              <li>Per-step latency breakdown</li>
+              <li>Error screenshots in report</li>
+            </ul>
+            <div class="mode-price">Free tier: <strong>5 users · 1 minute · 1 region · $0</strong></div>
+            <a href="/test.html?mode=scenario" class="btn btn-outline" style="width:100%">Build Scenarios →</a>
+          </div>
+        </div>
+      </div>
+    </section>
 
-<section class="how-it-works">
-  <h2>How It Works</h2>
-  <div class="steps">
-    <div class="step">
-      <div class="step-num">1</div>
-      <h3>Create Test</h3>
-      <p>Specify target URL, RPS, duration, and regions via API.</p>
+    <!-- How it works -->
+    <section class="section" id="how-it-works" style="background: var(--bg-alt); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+      <div class="container">
+        <div class="section-label text-center">Zero friction</div>
+        <h2 class="section-title text-center">Like a vending machine</h2>
+        <p class="section-sub centered">Money in, results out. No account, no stored data, no subscription. We forget you the moment the test ends.</p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start;">
+          <div>
+            <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 24px; color: var(--text);">Quick Load Test</h3>
+            <div class="steps-grid" style="grid-template-columns: 1fr;">
+              <div class="step">
+                <div class="step-num">1</div>
+                <div class="step-title">Paste your URL</div>
+                <div class="step-desc">Enter the endpoint to test. Pick RPS, duration, and which regions to attack from.</div>
+              </div>
+              <div class="step">
+                <div class="step-num">2</div>
+                <div class="step-title">Verify domain ownership</div>
+                <div class="step-desc">Serve a small file at <code style="font-size:0.8rem; background: #f3f4f6; padding: 2px 6px; border-radius: 4px;">/.well-known/loadtester-verify/{test-id}</code>. Prevents unauthorized testing.</div>
+              </div>
+              <div class="step">
+                <div class="step-num">3</div>
+                <div class="step-title">Pay with USDC or USDT</div>
+                <div class="step-desc">Connect your wallet. One-shot payment for this test. No recurring charges.</div>
+              </div>
+              <div class="step">
+                <div class="step-num">4</div>
+                <div class="step-title">Watch it live, get report</div>
+                <div class="step-desc">Real-time streaming metrics. When done, download your PDF report. We delete everything.</div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 24px; color: var(--text);">Scenario Test</h3>
+            <div class="steps-grid" style="grid-template-columns: 1fr;">
+              <div class="step">
+                <div class="step-num">1</div>
+                <div class="step-title">Create your scenarios</div>
+                <div class="step-desc">Upload a Playwright script, record your journey through your site, or build steps visually. Download as encrypted <code style="font-size:0.8rem; background: #f3f4f6; padding: 2px 6px; border-radius: 4px;">.loadtest</code> files.</div>
+              </div>
+              <div class="step">
+                <div class="step-num">2</div>
+                <div class="step-title">Upload &amp; configure</div>
+                <div class="step-desc">Upload your <code style="font-size:0.8rem; background: #f3f4f6; padding: 2px 6px; border-radius: 4px;">.loadtest</code> files. Set what percentage of users run each scenario (must total 100%).</div>
+              </div>
+              <div class="step">
+                <div class="step-num">3</div>
+                <div class="step-title">Verify &amp; pay</div>
+                <div class="step-desc">Domain verification, then pay once. Price is based on virtual user count and duration.</div>
+              </div>
+              <div class="step">
+                <div class="step-num">4</div>
+                <div class="step-title">Live browsers, rich report</div>
+                <div class="step-desc">Watch virtual browsers execute your scenarios. PDF report includes per-step timing, bottlenecks, and error screenshots.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Regions -->
+    <section class="section">
+      <div class="container">
+        <div class="section-label">Global coverage</div>
+        <h2 class="section-title">Attack from 4 continents</h2>
+        <p class="section-sub">Traffic originates from real data centers on four continents. See how your app behaves for users in each region — not just your local network.</p>
+        <div class="regions-grid">
+          <div class="region-card">
+            <div class="region-flag">🇺🇸</div>
+            <div>
+              <div class="region-name">Americas</div>
+              <div class="region-detail">Eastern United States</div>
+            </div>
+            <div class="region-dot"></div>
+          </div>
+          <div class="region-card">
+            <div class="region-flag">🇩🇪</div>
+            <div>
+              <div class="region-name">Europe — Central</div>
+              <div class="region-detail">Frankfurt, Germany</div>
+            </div>
+            <div class="region-dot"></div>
+          </div>
+          <div class="region-card">
+            <div class="region-flag">🇬🇧</div>
+            <div>
+              <div class="region-name">Europe — West</div>
+              <div class="region-detail">London, United Kingdom</div>
+            </div>
+            <div class="region-dot"></div>
+          </div>
+          <div class="region-card">
+            <div class="region-flag">🇸🇬</div>
+            <div>
+              <div class="region-name">Asia-Pacific</div>
+              <div class="region-detail">Singapore</div>
+            </div>
+            <div class="region-dot"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing -->
+    <section class="section" id="pricing" style="background: var(--bg-alt); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+      <div class="container">
+        <div class="section-label text-center">Transparent pricing</div>
+        <h2 class="section-title text-center">Pay per test, not per month</h2>
+        <p class="section-sub centered">No subscription. No account. One payment per test. USDC or USDT only.</p>
+
+        <div class="pricing-tabs">
+          <button class="pricing-tab active" onclick="showPricing('simple')">Quick Load Test</button>
+          <button class="pricing-tab" onclick="showPricing('scenario')">Scenario Test</button>
+        </div>
+
+        <!-- Simple mode pricing -->
+        <div class="pricing-grid" id="pricing-simple">
+          <div class="price-card">
+            <div class="price-name">Free</div>
+            <div class="price-amount"><span class="currency">$</span>0</div>
+            <div class="price-per">per test</div>
+            <ul class="price-features">
+              <li>100 RPS</li>
+              <li>1 minute duration</li>
+              <li>1 region</li>
+              <li>Live streaming metrics</li>
+              <li>PDF report</li>
+            </ul>
+            <a href="/test.html?mode=simple" class="btn btn-outline" style="width:100%">Start Free</a>
+          </div>
+          <div class="price-card featured">
+            <div class="price-name">Standard</div>
+            <div class="price-amount"><span class="currency">$</span>19<span style="font-size:1.2rem;font-weight:600">.37</span></div>
+            <div class="price-per">per test</div>
+            <ul class="price-features">
+              <li>10,000 RPS</li>
+              <li>10 minutes duration</li>
+              <li>All 4 regions</li>
+              <li>Live streaming metrics</li>
+              <li>PDF report with graphs</li>
+              <li>Per-region breakdown</li>
+            </ul>
+            <a href="/test.html?mode=simple&tier=standard" class="btn btn-primary" style="width:100%">Run Standard Test</a>
+          </div>
+          <div class="price-card">
+            <div class="price-name">Heavy</div>
+            <div class="price-amount"><span class="currency">$</span>97<span style="font-size:1.2rem;font-weight:600">.53</span></div>
+            <div class="price-per">per test</div>
+            <ul class="price-features">
+              <li>100,000 RPS</li>
+              <li>60 minutes duration</li>
+              <li>All 4 regions</li>
+              <li>Live streaming metrics</li>
+              <li>PDF report with graphs</li>
+              <li>Per-region breakdown</li>
+              <li>Throughput timeline charts</li>
+            </ul>
+            <a href="/test.html?mode=simple&tier=heavy" class="btn btn-outline" style="width:100%">Run Heavy Test</a>
+          </div>
+        </div>
+
+        <!-- Scenario mode pricing -->
+        <div class="pricing-grid pricing-grid-hidden" id="pricing-scenario">
+          <div class="price-card">
+            <div class="price-name">Free</div>
+            <div class="price-amount"><span class="currency">$</span>0</div>
+            <div class="price-per">per test</div>
+            <ul class="price-features">
+              <li>5 virtual browsers</li>
+              <li>1 minute duration</li>
+              <li>1 region</li>
+              <li>Playwright execution</li>
+              <li>PDF report</li>
+            </ul>
+            <a href="/test.html?mode=scenario" class="btn btn-outline" style="width:100%">Start Free</a>
+          </div>
+          <div class="price-card featured">
+            <div class="price-name">Standard</div>
+            <div class="price-amount"><span class="currency">$</span>47<span style="font-size:1.2rem;font-weight:600">.21</span></div>
+            <div class="price-per">per test</div>
+            <ul class="price-features">
+              <li>100 virtual browsers</li>
+              <li>10 minutes duration</li>
+              <li>All 4 regions</li>
+              <li>Per-step latency breakdown</li>
+              <li>Error screenshots</li>
+              <li>PDF report with graphs</li>
+            </ul>
+            <a href="/test.html?mode=scenario&tier=standard" class="btn btn-primary" style="width:100%">Run Standard Test</a>
+          </div>
+          <div class="price-card">
+            <div class="price-name">Heavy</div>
+            <div class="price-amount"><span class="currency">$</span>197<span style="font-size:1.2rem;font-weight:600">.53</span></div>
+            <div class="price-per">per test</div>
+            <ul class="price-features">
+              <li>500 virtual browsers</li>
+              <li>60 minutes duration</li>
+              <li>All 4 regions</li>
+              <li>Per-step latency breakdown</li>
+              <li>Error screenshots</li>
+              <li>PDF report with graphs</li>
+              <li>Bottleneck identification</li>
+            </ul>
+            <a href="/test.html?mode=scenario&tier=heavy" class="btn btn-outline" style="width:100%">Run Heavy Test</a>
+          </div>
+        </div>
+
+        <p style="text-align:center; margin-top:28px; font-size:0.85rem; color:var(--text-secondary);">All payments in USDC or USDT. Non-refundable. You must own or be authorized to test the target domain.</p>
+      </div>
+    </section>
+
+    <!-- Domain Verification -->
+    <section class="section">
+      <div class="container">
+        <div class="section-label">Anti-DDoS protection</div>
+        <h2 class="section-title">Domain verification</h2>
+        <p class="section-sub" style="margin-bottom: 36px;">Before any test begins, you must prove you control the target domain. This prevents LoadTester from being used as a DDoS tool against sites you don't own.</p>
+        <div class="verify-box">
+          <div class="verify-step">
+            <div class="verify-step-num">1</div>
+            <div class="verify-step-content">
+              <h4>Start a test — get your verification ID</h4>
+              <p>When you configure a test, we generate a unique test ID (e.g. <code style="background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:0.82rem;">lt_a3f9b2c1</code>).</p>
+            </div>
+          </div>
+          <div class="verify-step">
+            <div class="verify-step-num">2</div>
+            <div class="verify-step-content">
+              <h4>Serve a file at the verification path</h4>
+              <p>Create a file at <code style="background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:0.82rem;">/.well-known/loadtester-verify/{test-id}</code> with the content we show you.</p>
+              <div class="code-block"><span class="comment"># Example: serve it with any web server</span>
+mkdir -p /var/www/.well-known/loadtester-verify
+echo <span class="str">"lt_a3f9b2c1:verified:2026"</span> > /var/www/.well-known/loadtester-verify/lt_a3f9b2c1
+
+<span class="comment"># Or with nginx, just add:</span>
+location /.well-known/loadtester-verify/ &#123;
+  root /var/www;
+&#125;</div>
+            </div>
+          </div>
+          <div class="verify-step">
+            <div class="verify-step-num">3</div>
+            <div class="verify-step-content">
+              <h4>Click "Verify" — we check it and proceed</h4>
+              <p>We fetch the file to confirm it's there. Once verified, you can pay and launch the test. The file can be removed after the test ends.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <div class="container">
+      <div class="cta-section">
+        <h2>Ready to break something?</h2>
+        <p>Find out how your app holds up under real load before your users find out the hard way.</p>
+        <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+          <a href="/test.html?mode=simple" class="btn btn-primary btn-lg">Quick Load Test — Free</a>
+          <a href="/test.html?mode=scenario" class="btn btn-outline btn-lg">Scenario Test — Free</a>
+        </div>
+      </div>
     </div>
-    <div class="step">
-      <div class="step-num">2</div>
-      <h3>Verify Domain</h3>
-      <p>Serve a verification file to prove ownership. Prevents abuse.</p>
+  </main>
+
+  <footer>
+    <div class="container inner">
+      <div class="logo" style="font-size:1rem;">
+        <svg viewBox="0 0 32 32" fill="none" width="24" height="24">
+          <rect width="32" height="32" rx="6" fill="#dc2626"/>
+          <circle cx="16" cy="18" r="7" stroke="white" stroke-width="2" fill="none"/>
+          <path d="M16 18 L21 13" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M10 18 A6 6 0 0 1 22 18" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <circle cx="16" cy="18" r="1.5" fill="white"/>
+        </svg>
+        <span><span style="color:var(--text)">Load</span><span style="color:var(--red)">Tester</span></span>
+      </div>
+      <div class="links">
+        <a href="/docs.html">Docs</a>
+        <a href="/terms.html">Terms</a>
+        <a href="/test.html">Start Testing</a>
+      </div>
+      <div class="copy">© 2026 LoadTester. theloadtester.com</div>
     </div>
-    <div class="step">
-      <div class="step-num">3</div>
-      <h3>Generate Load</h3>
-      <p>Workers on 4 continents hammer your endpoint simultaneously.</p>
-    </div>
-    <div class="step">
-      <div class="step-num">4</div>
-      <h3>Get Report</h3>
-      <p>Aggregated P50/P95/P99, error rate, throughput from all regions.</p>
-    </div>
-  </div>
-</section>
+  </footer>
 
-<section class="pricing" id="pricing">
-  <h2>Pay Per Test</h2>
-  <p class="subtitle">No monthly fees. Pay with Visa, Mastercard, or USDC when you test.</p>
-  <div class="pricing-grid">
-    <div class="price-card">
-      <h3>Free</h3>
-      <div class="price">$0 <span>/test</span></div>
-      <p class="price-note">Try it out</p>
-      <ul>
-        <li>100 RPS max</li>
-        <li>1 minute duration</li>
-        <li>1 location</li>
-        <li>Basic report</li>
-      </ul>
-      <a href="#" class="btn btn-outline" style="width:100%">Run Free Test</a>
-    </div>
-    <div class="price-card featured">
-      <h3>Pro</h3>
-      <div class="price">$20 <span>/test</span></div>
-      <p class="price-note">For serious testing</p>
-      <ul>
-        <li>10,000 RPS max</li>
-        <li>10 minute duration</li>
-        <li>All 4 locations</li>
-        <li>Real-time metrics</li>
-        <li>Detailed report</li>
-      </ul>
-      <a href="#" class="btn btn-primary" style="width:100%">Run Pro Test</a>
-    </div>
-    <div class="price-card">
-      <h3>Business</h3>
-      <div class="price">$100 <span>/test</span></div>
-      <p class="price-note">Maximum firepower</p>
-      <ul>
-        <li>100,000 RPS max</li>
-        <li>60 minute duration</li>
-        <li>All 4 locations</li>
-        <li>Real-time metrics</li>
-        <li>Detailed report + export</li>
-        <li>Priority execution</li>
-      </ul>
-      <a href="#" class="btn btn-outline" style="width:100%">Contact Us</a>
-    </div>
-  </div>
-  <p style="text-align:center; color:var(--muted); font-size:0.85rem; margin-top:2rem;">Visa and Mastercard accepted &mdash; no crypto wallet needed.</p>
-</section>
-
-<section class="api-example" id="api">
-  <h2>API-First Design</h2>
-  <div class="code-block">
-<span class="comment"># Step 1: Create a load test</span>
-curl -X POST https://api.loadtester.example.com/v1/tests \
-  -H <span class="string">'Content-Type: application/json'</span> \
-  -H <span class="string">'X-API-Key: your-api-key'</span> \
-  -d <span class="string">'{
-    "target_url": "https://my-api.com/v1/health",
-    "rps": 5000,
-    "duration_seconds": 300,
-    "regions": ["americas", "europe-de", "europe-uk", "asia"],
-    "tier": "pro"
-  }'</span>
-
-<span class="comment"># Step 2: Serve verification file, then start</span>
-curl -X POST https://api.loadtester.example.com/v1/tests/{id}/start \
-  -H <span class="string">'X-API-Key: your-api-key'</span>
-
-<span class="comment"># Step 3: Get results</span>
-curl https://api.loadtester.example.com/v1/tests/{id}/report \
-  -H <span class="string">'X-API-Key: your-api-key'</span>
-
-<span class="comment"># Response</span>
-{
-  <span class="string">"total_requests"</span>: 1500000,
-  <span class="string">"avg_rps"</span>: 5000,
-  <span class="string">"p50_latency"</span>: 22.4,
-  <span class="string">"p95_latency"</span>: 87.1,
-  <span class="string">"p99_latency"</span>: 210.5,
-  <span class="string">"error_rate"</span>: 0.12,
-  <span class="string">"total_bytes"</span>: 750000000
-}
-  </div>
-</section>
-
-<section class="comparison">
-  <h2>How We Compare</h2>
-  <table>
-    <thead>
-      <tr><th>Feature</th><th>LoadTester</th><th>k6 Cloud</th><th>loader.io</th><th>BlazeMeter</th></tr>
-    </thead>
-    <tbody>
-      <tr class="highlight-row"><td>Pricing</td><td>$20/test</td><td>$99/mo</td><td>$100/mo</td><td>$500/mo</td></tr>
-      <tr><td>Max RPS</td><td>100,000</td><td>Varies</td><td>10,000</td><td>Varies</td></tr>
-      <tr><td>Locations</td><td>4 continents</td><td>15 regions</td><td>1 region</td><td>5 regions</td></tr>
-      <tr><td>Payment</td><td>Card or USDC</td><td>Credit card</td><td>Credit card</td><td>Credit card</td></tr>
-      <tr><td>Domain verification</td><td>Built-in</td><td>No</td><td>No</td><td>No</td></tr>
-    </tbody>
-  </table>
-</section>
-
-<footer>
-  <p><a href="terms.html">Terms of Service</a> &middot; <a href="mailto:support@theloadtester.com">Contact</a></p>
-  <p style="margin-top:0.5rem">Distributed load testing from 4 continents.</p>
-  <div style="margin-top:1rem;display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;font-size:0.8rem;">
-    <span style="color:var(--muted)">Also from us:</span>
-    <a href="https://sertone.net" style="color:var(--muted)">Sertone</a>
-    <a href="https://l2aas.net" style="color:var(--muted)">L2aaS</a>
-    <a href="https://chainrpc.net" style="color:var(--muted)">ChainRPC</a>
-    <a href="https://chainclone.net" style="color:var(--muted)">ChainClone</a>
-    <a href="https://pingdog.net" style="color:var(--muted)">PingDog</a>
-    <a href="https://swarmbrowser.net" style="color:var(--muted)">SwarmBrowser</a>
-  </div>
-  <p style="margin-top:0.5rem">&copy; 2026 LoadTester</p>
-</footer>
-
+  <script>
+    function showPricing(mode) {
+      document.querySelectorAll('.pricing-tab').forEach((t, i) => {
+        t.classList.toggle('active', (mode === 'simple' && i === 0) || (mode === 'scenario' && i === 1));
+      });
+      document.getElementById('pricing-simple').className = 'pricing-grid' + (mode === 'simple' ? '' : ' pricing-grid-hidden');
+      document.getElementById('pricing-scenario').className = 'pricing-grid' + (mode === 'scenario' ? '' : ' pricing-grid-hidden');
+    }
+  </script>
 </body>
 </html>

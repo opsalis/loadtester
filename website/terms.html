@@ -1,62 +1,285 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Terms of Service — LoadTester</title>
+  <meta name="description" content="LoadTester Terms of Service. Read before using our load testing service.">
+  <link rel="canonical" href="https://theloadtester.com/terms.html">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23dc2626'/%3E%3Ccircle cx='16' cy='18' r='7' stroke='white' stroke-width='2' fill='none'/%3E%3Cpath d='M16 18 L21 13' stroke='white' stroke-width='2.5' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='18' r='1.5' fill='white'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #111827; background: #fff; line-height: 1.7; }
-    .container { max-width: 700px; margin: 0 auto; padding: 3rem 2rem; }
-    h1 { font-size: 2rem; margin-bottom: 0.5rem; }
-    .date { color: #6b7280; margin-bottom: 2rem; }
-    h2 { font-size: 1.2rem; margin-top: 2rem; margin-bottom: 0.5rem; }
-    p, li { margin-bottom: 0.75rem; color: #374151; }
-    ul { padding-left: 1.5rem; }
-    a { color: #7c3aed; }
-    footer { text-align: center; padding: 2rem; color: #6b7280; font-size: 0.85rem; border-top: 1px solid #e5e7eb; margin-top: 3rem; }
+    :root { --red: #dc2626; --text: #111827; --text-secondary: #4b5563; --bg: #fff; --border: #e5e7eb; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.75; -webkit-font-smoothing: antialiased; }
+    a { color: var(--red); }
+    nav { background: rgba(255,255,255,0.95); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.1rem; color: var(--text); text-decoration: none; }
+    .logo svg { width: 28px; height: 28px; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 24px 96px; }
+    h1 { font-size: 2rem; font-weight: 800; letter-spacing: -0.8px; margin-bottom: 8px; }
+    .meta { color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 40px; }
+    h2 { font-size: 1.1rem; font-weight: 700; margin: 40px 0 10px; padding-top: 24px; border-top: 1px solid var(--border); }
+    h2:first-of-type { border-top: none; }
+    p { color: var(--text-secondary); margin-bottom: 14px; font-size: 0.93rem; }
+    ul, ol { color: var(--text-secondary); padding-left: 22px; margin-bottom: 14px; font-size: 0.93rem; }
+    li { margin-bottom: 5px; }
+    strong { color: var(--text); }
+    code { font-family: monospace; background: #f3f4f6; padding: 2px 5px; border-radius: 3px; font-size: 0.85em; color: #dc2626; }
+    .highlight { background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 14px 18px; margin: 16px 0; font-size: 0.9rem; }
+    .toc { background: #f9fafb; border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin-bottom: 40px; }
+    .toc h3 { font-size: 0.85rem; font-weight: 700; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); }
+    .toc ol { column-count: 2; column-gap: 24px; font-size: 0.82rem; color: var(--text-secondary); }
+    .toc li { margin-bottom: 4px; }
+    .toc a { color: var(--text-secondary); text-decoration: none; }
+    .toc a:hover { color: var(--red); }
+    @media (max-width: 600px) { .toc ol { column-count: 1; } }
   </style>
 </head>
 <body>
-<div class="container">
-  <h1>Terms of Service</h1>
-  <p class="date">Last updated: April 9, 2026</p>
+  <nav>
+    <a href="/" class="logo">
+      <svg viewBox="0 0 32 32" fill="none">
+        <rect width="32" height="32" rx="6" fill="#dc2626"/>
+        <circle cx="16" cy="18" r="7" stroke="white" stroke-width="2" fill="none"/>
+        <path d="M16 18 L21 13" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M10 18 A6 6 0 0 1 22 18" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <circle cx="16" cy="18" r="1.5" fill="white"/>
+      </svg>
+      <span><span>Load</span><span style="color:var(--red)">Tester</span></span>
+    </a>
+    <a href="/" style="font-size:0.88rem;color:var(--text-secondary);text-decoration:none;">Back to Home</a>
+  </nav>
 
-  <h2>1. Service Description</h2>
-  <p>LoadTester provides distributed load testing services. We generate HTTP traffic against your endpoints from multiple geographic locations to measure performance.</p>
+  <div class="wrap">
+    <h1>Terms of Service</h1>
+    <p class="meta">Last updated: April 12, 2026 &nbsp;&middot;&nbsp; Effective immediately upon use</p>
 
-  <h2>2. Domain Verification (Mandatory)</h2>
-  <p>Before any load test executes, you must verify ownership of the target domain by serving a verification file at a specific URL. This is a mandatory anti-DDoS protection measure. You may only load test domains you own or have written authorization to test.</p>
+    <div class="highlight">
+      <strong>Read carefully before using LoadTester.</strong> By using the LoadTester service, you agree to be legally bound by these Terms. These Terms include a binding arbitration clause, class action waiver, and a DDoS responsibility clause. Your use constitutes unconditional acceptance.
+    </div>
 
-  <h2>3. Prohibited Use</h2>
-  <ul>
-    <li>Testing domains you do not own or control</li>
-    <li>Attempting to bypass domain verification</li>
-    <li>Using the service for denial-of-service attacks</li>
-    <li>Testing critical infrastructure without authorization</li>
-    <li>Any illegal or harmful activity</li>
-  </ul>
+    <div class="toc">
+      <h3>Table of Contents</h3>
+      <ol>
+        <li><a href="#s1">Acceptance of Terms</a></li>
+        <li><a href="#s2">Description of Service</a></li>
+        <li><a href="#s3">Eligibility</a></li>
+        <li><a href="#s4">Account Registration</a></li>
+        <li><a href="#s5">Domain Verification Requirement</a></li>
+        <li><a href="#s6">Authorized Use Only</a></li>
+        <li><a href="#s7">DDoS and Abuse Policy</a></li>
+        <li><a href="#s8">Prohibited Conduct</a></li>
+        <li><a href="#s9">Payments and Pricing</a></li>
+        <li><a href="#s10">Refund Policy</a></li>
+        <li><a href="#s11">Cryptocurrency Payments</a></li>
+        <li><a href="#s12">Data Retention Policy</a></li>
+        <li><a href="#s13">The .loadtest File Format</a></li>
+        <li><a href="#s14">Scenario Encryption</a></li>
+        <li><a href="#s15">Intellectual Property</a></li>
+        <li><a href="#s16">Privacy</a></li>
+        <li><a href="#s17">No Account Persistence</a></li>
+        <li><a href="#s18">Service Availability</a></li>
+        <li><a href="#s19">Test Accuracy and Results</a></li>
+        <li><a href="#s20">Disclaimer of Warranties</a></li>
+        <li><a href="#s21">Limitation of Liability</a></li>
+        <li><a href="#s22">Indemnification</a></li>
+        <li><a href="#s23">Third-Party Services</a></li>
+        <li><a href="#s24">Target Service Responsibility</a></li>
+        <li><a href="#s25">Rate Limiting and Abuse Prevention</a></li>
+        <li><a href="#s26">Technical Limitations</a></li>
+        <li><a href="#s27">Operator Information</a></li>
+        <li><a href="#s28">Governing Law</a></li>
+        <li><a href="#s29">Binding Arbitration</a></li>
+        <li><a href="#s30">Class Action Waiver</a></li>
+        <li><a href="#s31">Jury Trial Waiver</a></li>
+        <li><a href="#s32">Injunctive Relief</a></li>
+        <li><a href="#s33">Force Majeure</a></li>
+        <li><a href="#s34">Severability</a></li>
+        <li><a href="#s35">Entire Agreement</a></li>
+        <li><a href="#s36">Modification of Terms</a></li>
+        <li><a href="#s37">Assignment</a></li>
+        <li><a href="#s38">No Waiver</a></li>
+        <li><a href="#s39">Notices</a></li>
+        <li><a href="#s40">Compliance with Laws</a></li>
+        <li><a href="#s41">Export Controls</a></li>
+        <li><a href="#s42">Anti-Money Laundering</a></li>
+        <li><a href="#s43">Security Responsibilities</a></li>
+        <li><a href="#s44">Reporting Abuse</a></li>
+        <li><a href="#s45">Children's Use</a></li>
+        <li><a href="#s46">Beta Features</a></li>
+        <li><a href="#s47">Feedback</a></li>
+        <li><a href="#s48">Relationship of Parties</a></li>
+        <li><a href="#s49">Headings</a></li>
+        <li><a href="#s50">Language</a></li>
+        <li><a href="#s51">Contact</a></li>
+      </ol>
+    </div>
 
-  <h2>4. Payment</h2>
-  <p>Tests are paid in USDC. Payment is required before test execution for paid tiers. All payments are final and non-refundable.</p>
+    <h2 id="s1">1. Acceptance of Terms</h2>
+    <p>These Terms of Service ("Terms") govern your access to and use of the LoadTester service operated at theloadtester.com (the "Service"). By accessing, using, configuring, paying for, or in any way interacting with the Service, you ("User," "Customer," "you") agree to be bound by these Terms. If you are using the Service on behalf of an organization, you represent that you have authority to bind that organization, and "you" includes both you and the organization. These Terms are a legally binding contract. Read them completely before using the Service.</p>
 
-  <h2>5. Liability</h2>
-  <p>You are solely responsible for any impact load testing has on your infrastructure or third-party services. LoadTester is not responsible for downtime, data loss, or other damages caused by load tests you initiate.</p>
+    <h2 id="s2">2. Description of Service</h2>
+    <p>LoadTester provides on-demand distributed load testing services generating simulated traffic against target URLs and web applications. The Service operates in two modes: (a) Quick Load Test (Simple Mode): HTTP-level traffic generation at up to 100,000 requests per second from up to four geographic regions; and (b) Scenario Test: browser-based simulation using Playwright, with up to 500 concurrent virtual browsers executing user-defined scenarios.</p>
+    <p>The Service is designed for performance testing, capacity planning, and quality assurance of systems the Customer owns or is authorized to test. LoadTester operates as a one-shot, stateless service: we do not store customer data beyond the session lifetime, do not require account creation, and do not maintain ongoing customer relationships beyond the transaction.</p>
 
-  <h2>6. Data Retention</h2>
-  <p>Test results and metrics are retained for 30 days after test completion. We do not store the content of HTTP responses.</p>
+    <h2 id="s3">3. Eligibility</h2>
+    <p>You must be at least 18 years of age to use the Service. By using the Service, you represent that you are at least 18 years old and have the legal capacity to enter into this agreement. The Service is not available to individuals prohibited from using it under applicable law. You must be in a jurisdiction where receiving and using distributed load testing services is lawful. You are solely responsible for ensuring compliance with the laws of your jurisdiction.</p>
 
-  <h2>7. Service Availability</h2>
-  <p>We provide the service "as is" without guarantees of availability or accuracy. Test capacity may vary based on current demand.</p>
+    <h2 id="s4">4. Account Registration</h2>
+    <p>The Service does not require account creation, email addresses, usernames, or passwords. Each test session is independent and stateless. Your wallet address (used for payment) is your sole identifying marker for any transaction, and even this is not stored after the session ends. You are responsible for maintaining the security of your cryptocurrency wallet and private keys. LoadTester has no ability to recover lost wallet access.</p>
 
-  <h2>8. Termination</h2>
-  <p>We reserve the right to terminate accounts that violate these terms, particularly any attempts to use the service for unauthorized load testing.</p>
+    <h2 id="s5">5. Domain Verification Requirement</h2>
+    <p><strong>Domain verification is mandatory for all tests.</strong> Before any load test commences, you must demonstrate control of the target domain by serving a verification file at <code>/.well-known/loadtester-verify/{test-id}</code>. LoadTester verifies this file before processing payment or initiating test traffic. If payment is submitted and verification subsequently fails, the payment is non-refundable.</p>
+    <p>You acknowledge that domain verification is not a guarantee of legal authorization. You remain solely responsible for ensuring you have the legal right to load test the target system, including any third-party components, CDNs, or infrastructure services that serve the target domain.</p>
 
-  <h2>9. Changes</h2>
-  <p>We may update these terms at any time. Continued use constitutes acceptance.</p>
-</div>
-<footer>
-  <a href="index.html">Back to LoadTester</a>
-</footer>
+    <h2 id="s6">6. Authorized Use Only</h2>
+    <p><strong>You may only use LoadTester to test systems you own, operate, or have explicit written authorization to test from the system owner.</strong> By initiating any test, you represent and warrant that: (a) you own the target domain and all underlying infrastructure, OR (b) you have explicit written permission from the domain owner to conduct load testing of the specified magnitude, duration, and geographic distribution, AND (c) you have notified and obtained consent from any shared infrastructure providers that may be affected.</p>
+    <p>Testing systems without authorization is illegal in most jurisdictions under computer fraud and abuse laws, including the Computer Fraud and Abuse Act (CFAA), the UK Computer Misuse Act, and equivalent statutes worldwide. LoadTester is not responsible for your compliance with applicable law.</p>
+
+    <h2 id="s7">7. DDoS and Abuse Policy</h2>
+    <p><strong>The Customer is solely and exclusively responsible for all consequences arising from load testing activity conducted through their test session.</strong> Load testing generates high-volume traffic that may: cause degradation or outage of the target system; trigger rate limiting, firewall blocks, or CAPTCHA challenges; exceed contracted bandwidth or compute quotas; cause financial charges on metered infrastructure; be interpreted by monitoring systems as malicious traffic; or result in suspension of the target's hosting, CDN, or network services.</p>
+    <p>The Customer is solely responsible for: ensuring the target system is designed to handle the requested load; notifying relevant infrastructure providers before testing; ensuring testing does not violate terms with cloud, hosting, or network providers; and all costs, claims, liabilities, and damages resulting from the test traffic. <strong>LoadTester expressly disclaims all liability for any real-world impact of test traffic.</strong></p>
+
+    <h2 id="s8">8. Prohibited Conduct</h2>
+    <p>You agree not to use the Service to: test systems you do not own or are not authorized to test; conduct attacks against critical infrastructure, healthcare systems, financial systems, or emergency services; deliberately cause outages to third-party services; violate any applicable law or regulation; circumvent or attempt to circumvent domain verification; resell or white-label the Service without written authorization; reverse engineer or attempt to extract the Service's source code or encryption keys; impair the availability or integrity of the Service itself; submit false or fraudulent payment information; launder money or fund illegal activities; or test systems on behalf of sanctioned individuals or entities. Violation may result in immediate termination, forfeiture of payment, and reporting to relevant authorities.</p>
+
+    <h2 id="s9">9. Payments and Pricing</h2>
+    <p>Payments are made in USDC (USD Coin) or USDT (Tether) cryptocurrency. All prices are denominated in USD and correspond to equivalent stablecoin amounts at transaction time. Current pricing: Simple Mode: Free ($0.00, 100 RPS, 1 minute, 1 region), Standard ($19.37, 10,000 RPS, 10 minutes, all 4 regions), Heavy ($97.53, 100,000 RPS, 60 minutes, all 4 regions). Scenario Mode: Free ($0.00, 5 virtual browsers, 1 minute, 1 region), Standard ($47.21, 100 browsers, 10 minutes, all 4 regions), Heavy ($197.53, 500 browsers, 60 minutes, all 4 regions). Prices are subject to change without notice. The price in effect at payment confirmation applies.</p>
+
+    <h2 id="s10">10. Refund Policy</h2>
+    <p><strong>All payments are final and non-refundable.</strong> No refunds will be issued under any circumstances, including: test completing without expected results; test failing due to target system unavailability; domain verification failure after payment; customer error in configuration; service interruption or partial execution; customer dissatisfaction; or change of mind. In the event of a Service failure attributable solely to LoadTester's infrastructure, LoadTester may at its sole discretion issue a credit toward a future test. This is not a guarantee and creates no obligation.</p>
+
+    <h2 id="s11">11. Cryptocurrency Payments</h2>
+    <p>Blockchain transactions are irreversible once confirmed. LoadTester is not responsible for transaction failures due to network congestion, gas price issues, or wallet errors. You are responsible for ensuring sufficient token balance and network gas fees. Exchange rate fluctuations in USDC or USDT value are not LoadTester's responsibility. You have sole custody of your wallet and private keys.</p>
+
+    <h2 id="s12">12. Data Retention Policy</h2>
+    <p>LoadTester operates on a zero-retention policy. No customer identifying information is stored permanently. Test configuration, target URLs, and scenario content are deleted immediately upon test completion. Metrics data is held in memory during the test session and not written to permanent storage. PDF reports are generated in-memory and transmitted directly to the Customer — no copy is retained. Wallet addresses are purged within 24 hours. Domain verification records are purged immediately after verification. LoadTester cannot retrieve historical test data, recreate past reports, or provide evidence of past test activity. You are responsible for downloading and preserving your PDF report immediately upon test completion.</p>
+
+    <h2 id="s13">13. The .loadtest File Format</h2>
+    <p>Scenario scripts are encrypted and stored by the Customer as <code>.loadtest</code> files. LoadTester does not retain copies. The Customer is responsible for: safekeeping of <code>.loadtest</code> files; ensuring files are not shared with unauthorized parties; and understanding that <code>.loadtest</code> files contain executable instructions that will be run against the target system when uploaded. LoadTester is not responsible for the content of Customer-created scenarios, including malformed, incorrect, or harmful instructions within them.</p>
+
+    <h2 id="s14">14. Scenario Encryption</h2>
+    <p>Scenario content is encrypted using AES-256-GCM with a key held exclusively by LoadTester's servers. This encryption exists to prevent unauthorized execution of scenarios by third parties and to implement domain verification as an access control mechanism. The encryption does not constitute a representation that Customer scenario content is protected from disclosure under legal process.</p>
+
+    <h2 id="s15">15. Intellectual Property</h2>
+    <p>The Service, including its software, infrastructure, algorithms, visual design, and all content created by LoadTester, is protected by intellectual property laws. You may not copy, modify, distribute, sell, or lease any part of the Service. Playwright scripts and scenario content created by the Customer remain the Customer's intellectual property. By uploading content for execution, the Customer grants LoadTester a limited, non-exclusive, royalty-free license to execute that content solely for the purpose of performing the contracted test.</p>
+
+    <h2 id="s16">16. Privacy</h2>
+    <p>LoadTester collects minimal data necessary to operate the Service. No personally identifiable information is required. Data collected: the target URL submitted for testing (retained for the test session only); the wallet address used for payment (purged within 24 hours); and technical logs necessary for service operation (retained up to 72 hours, anonymized). LoadTester does not sell, share, or monetize customer data. LoadTester does not use cookies, tracking pixels, or behavioral analytics.</p>
+
+    <h2 id="s17">17. No Account Persistence</h2>
+    <p>The Service has no account system. Each test session is independent. LoadTester cannot link any past test session to a current session. There is no customer profile, history, or relationship maintained beyond the transaction in progress. The Customer assumes full responsibility for maintaining any records of past tests.</p>
+
+    <h2 id="s18">18. Service Availability</h2>
+    <p>LoadTester does not guarantee any specific uptime or availability level. The Service is provided on an "as available" basis. Scheduled and unscheduled maintenance, infrastructure failures, and force majeure events may affect availability. LoadTester is not liable for any losses resulting from Service unavailability. In the event a test cannot be initiated due to LoadTester infrastructure failure after payment, LoadTester may at its sole discretion issue a credit.</p>
+
+    <h2 id="s19">19. Test Accuracy and Results</h2>
+    <p>LoadTester makes no representations regarding the accuracy, completeness, or fitness for purpose of test results. Load test results are influenced by many factors outside LoadTester's control, including network conditions, target system configuration, third-party CDN behavior, DNS resolution times, and TLS handshake overhead. Test results should be interpreted by qualified engineers and used as one input among many in performance analysis.</p>
+
+    <h2 id="s20">20. Disclaimer of Warranties</h2>
+    <p><strong>THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, TITLE, AND QUIET ENJOYMENT. LOADTESTER DOES NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED, ERROR-FREE, OR FREE FROM HARMFUL COMPONENTS. LOADTESTER DOES NOT WARRANT THAT THE RESULTS OF ANY TEST ARE ACCURATE, COMPLETE, OR RELIABLE.</strong> Some jurisdictions do not allow the exclusion of implied warranties; in such jurisdictions, the above disclaimers apply to the maximum extent permitted by law.</p>
+
+    <h2 id="s21">21. Limitation of Liability</h2>
+    <p><strong>TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, LOADTESTER'S TOTAL LIABILITY TO YOU FOR ANY CLAIM ARISING FROM OR RELATED TO THE SERVICE OR THESE TERMS SHALL NOT EXCEED ONE UNITED STATES DOLLAR ($1.00).</strong></p>
+    <p>IN NO EVENT SHALL LOADTESTER BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, PUNITIVE, OR EXEMPLARY DAMAGES, INCLUDING BUT NOT LIMITED TO LOSS OF PROFITS, LOSS OF REVENUE, LOSS OF GOODWILL, LOSS OF DATA, BUSINESS INTERRUPTION, COST OF SUBSTITUTE SERVICES, OR DAMAGES ARISING FROM YOUR USE OF OR INABILITY TO USE THE SERVICE, EVEN IF LOADTESTER HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. THIS LIMITATION APPLIES REGARDLESS OF THE THEORY OF LIABILITY.</p>
+
+    <h2 id="s22">22. Indemnification</h2>
+    <p>You agree to indemnify, defend, and hold harmless LoadTester and its officers, directors, employees, agents, contractors, and successors from and against any and all claims, damages, losses, costs, and expenses (including reasonable attorneys' fees) arising from or related to: your use or misuse of the Service; your violation of these Terms; your violation of any applicable law or regulation; your testing of systems you do not own or are not authorized to test; any damage caused to the target system or third parties by test traffic you initiated; any claims by the owner or operator of the target system; and your infringement of any intellectual property or privacy rights.</p>
+
+    <h2 id="s23">23. Third-Party Services</h2>
+    <p>The Service may integrate with or depend upon third-party services including cloud infrastructure providers, network transit providers, and blockchain networks. LoadTester is not responsible for the availability, performance, or data practices of such third-party services. Your use of those services is governed by their respective terms.</p>
+
+    <h2 id="s24">24. Target Service Responsibility</h2>
+    <p>You acknowledge that load testing inherently causes stress on the target system and may cause the target system to fail, restart, or become temporarily unavailable. LoadTester is not responsible for any downtime, data loss, financial loss, or other harm caused to the target system or its users as a result of test traffic you initiated. You are strongly advised to conduct load tests during off-peak hours, notify users and stakeholders before testing production systems, and test in staging or pre-production environments wherever possible.</p>
+
+    <h2 id="s25">25. Rate Limiting and Abuse Prevention</h2>
+    <p>LoadTester reserves the right to limit, throttle, suspend, or terminate any test at any time if LoadTester determines, in its sole discretion, that the test is being used for unauthorized, abusive, or illegal purposes. In such cases, no refund will be issued. LoadTester may report suspected abuse to relevant authorities, including internet service providers, cloud providers, and law enforcement agencies.</p>
+
+    <h2 id="s26">26. Technical Limitations</h2>
+    <p>The Service has the following known technical limitations: maximum concurrent tests are subject to infrastructure capacity; maximum Playwright scenario duration is 5 minutes per virtual user iteration; external domains may be blocked during scenario execution; WebSocket connections, gRPC streams, and non-HTTP protocols are not supported in Simple Mode; TLS certificate pinning in target applications may prevent browser-mode testing; and IP ranges used by LoadTester's test regions may be blocked by the target's CDN or firewall. LoadTester does not represent that it can successfully test all target systems, architectures, or configurations. No refund is issued if technical limitations prevent test completion.</p>
+
+    <h2 id="s27">27. Operator Information</h2>
+    <p>The Service is operated by <strong>Mesa Operations LLC</strong>, a Wyoming limited liability company, registered address: <strong>30 N Gould St Ste R, Sheridan, WY 82801, United States</strong>. The company is organized under the laws of the State of Wyoming. The Service is operated under the brand name "LoadTester" at theloadtester.com. The operator's name and address shall not be used in marketing materials, social media, or public communications related to the Service except as required by law.</p>
+
+    <h2 id="s28">28. Governing Law</h2>
+    <p>These Terms and any dispute arising hereunder shall be governed by and construed in accordance with the laws of the State of Wyoming, United States, without regard to conflict of law principles. The United Nations Convention on Contracts for the International Sale of Goods does not apply.</p>
+
+    <h2 id="s29">29. Dispute Resolution and Binding Arbitration</h2>
+    <p><strong>PLEASE READ THIS SECTION CAREFULLY. IT AFFECTS YOUR LEGAL RIGHTS.</strong> Any dispute, controversy, or claim arising out of or relating to these Terms or the Service shall be finally resolved by binding arbitration administered by JAMS under its Streamlined Arbitration Rules. The arbitration shall take place in Sheridan, Wyoming, or, at LoadTester's election, via videoconference. The arbitrator's decision shall be final and binding and may be enforced in any court of competent jurisdiction. Before commencing arbitration, the disputing party must provide written notice to the other party describing the dispute and relief sought. The parties shall attempt informal resolution for 30 days before initiating arbitration. Costs shall be borne as determined by the arbitrator, except that LoadTester shall not be required to pay costs exceeding the amount of any payment you made to LoadTester.</p>
+
+    <h2 id="s30">30. Class Action Waiver</h2>
+    <p><strong>YOU AND LOADTESTER AGREE THAT EACH MAY BRING CLAIMS AGAINST THE OTHER ONLY IN YOUR OR ITS INDIVIDUAL CAPACITY, AND NOT AS A PLAINTIFF OR CLASS MEMBER IN ANY PURPORTED CLASS OR REPRESENTATIVE PROCEEDING.</strong> No arbitration or proceeding shall be joined with any other without the consent of all parties. If this class action waiver is found unenforceable, the arbitration clause shall be void and disputes shall be resolved in Wyoming state or federal courts.</p>
+
+    <h2 id="s31">31. Jury Trial Waiver</h2>
+    <p>TO THE EXTENT ANY DISPUTE IS PERMITTED TO PROCEED IN COURT, <strong>BOTH PARTIES WAIVE ANY RIGHT TO A JURY TRIAL.</strong> All disputes in court shall be decided by a judge.</p>
+
+    <h2 id="s32">32. Injunctive Relief</h2>
+    <p>Notwithstanding the arbitration clause, either party may seek injunctive or other equitable relief in a court of competent jurisdiction without waiving the right to arbitrate other claims. LoadTester may seek injunctive relief in any jurisdiction where Customer is conducting unauthorized testing or otherwise violating these Terms.</p>
+
+    <h2 id="s33">33. Force Majeure</h2>
+    <p>Neither party shall be liable for any failure or delay in performance due to circumstances beyond its reasonable control, including acts of God, natural disasters, pandemics, war, terrorism, government action, internet infrastructure failures, denial-of-service attacks against LoadTester's infrastructure, power failures, or failures of third-party service providers. During a force majeure event, LoadTester's obligations are suspended.</p>
+
+    <h2 id="s34">34. Severability</h2>
+    <p>If any provision of these Terms is found to be invalid, illegal, or unenforceable, that provision shall be modified to the minimum extent necessary to make it enforceable, or severed if modification is not possible, and the remaining provisions shall continue in full force and effect.</p>
+
+    <h2 id="s35">35. Entire Agreement</h2>
+    <p>These Terms constitute the entire agreement between you and LoadTester with respect to the Service and supersede all prior agreements, understandings, representations, and warranties, whether oral or written. No modification of these Terms shall be binding unless in writing and signed by LoadTester.</p>
+
+    <h2 id="s36">36. Modification of Terms</h2>
+    <p>LoadTester reserves the right to modify these Terms at any time. Updated Terms will be posted at this URL with an updated effective date. Your continued use of the Service after the effective date of any modification constitutes acceptance. If you do not agree to modified Terms, discontinue use of the Service.</p>
+
+    <h2 id="s37">37. Assignment</h2>
+    <p>You may not assign, transfer, or delegate any of your rights or obligations under these Terms without LoadTester's prior written consent. LoadTester may assign these Terms to any successor entity or in connection with any merger, acquisition, or sale of assets, without your consent.</p>
+
+    <h2 id="s38">38. No Waiver</h2>
+    <p>LoadTester's failure to enforce any provision of these Terms shall not constitute a waiver of its right to enforce such provision in the future. Any waiver of any breach or default shall not be deemed a waiver of any subsequent breach or default.</p>
+
+    <h2 id="s39">39. Notices</h2>
+    <p>Notices from LoadTester to Customers will be posted on the Service interface. If you need to send legal notices to LoadTester, send them via certified mail to the registered address in Section 27. Electronic notices to LoadTester are not effective unless specifically acknowledged in writing by LoadTester.</p>
+
+    <h2 id="s40">40. Compliance with Laws</h2>
+    <p>You are responsible for complying with all applicable local, state, national, and international laws, regulations, and ordinances in connection with your use of the Service. This includes computer fraud and abuse laws, data protection laws, privacy laws, export control regulations, and anti-money laundering regulations. LoadTester's provision of the Service does not imply that your use in any particular jurisdiction is lawful.</p>
+
+    <h2 id="s41">41. Export Controls</h2>
+    <p>You represent that you are not located in, or a national or resident of, any country to which the United States has embargoed goods or services, and that you are not a person or entity listed on any U.S. government restricted party list, including the Specially Designated Nationals list administered by the U.S. Treasury Department's Office of Foreign Assets Control (OFAC).</p>
+
+    <h2 id="s42">42. Anti-Money Laundering</h2>
+    <p>You represent that payments made through the Service are from legitimate sources and are not proceeds of any illegal activity. You agree to cooperate with any investigation LoadTester is required to conduct under applicable anti-money laundering laws. LoadTester reserves the right to refuse service to any user suspected of money laundering or financial crime.</p>
+
+    <h2 id="s43">43. Security Responsibilities</h2>
+    <p>You are solely responsible for the security of your own systems, including securing your cryptocurrency wallet and private keys, ensuring your test target has appropriate security monitoring during the test, and preventing unauthorized access to any <code>.loadtest</code> files you create and store locally. LoadTester cannot be held responsible for security incidents arising from your use of the Service.</p>
+
+    <h2 id="s44">44. Reporting Abuse</h2>
+    <p>If you believe LoadTester is being used to conduct unauthorized load testing against systems you operate, report it by serving an HTTP 403 response at the verification path and contacting LoadTester via the address in Section 27. LoadTester takes abuse reports seriously and will investigate promptly. However, LoadTester cannot guarantee the ability to stop in-progress tests in real time due to the distributed nature of the infrastructure.</p>
+
+    <h2 id="s45">45. Children's Use</h2>
+    <p>The Service is not directed to or intended for use by individuals under the age of 18. LoadTester does not knowingly provide the Service to minors. If you are a parent or guardian and believe your minor child has used the Service, contact LoadTester via the address in Section 27.</p>
+
+    <h2 id="s46">46. Beta Features</h2>
+    <p>LoadTester may from time to time offer beta or preview features. Such features are provided "as is" with no warranty of any kind, may be discontinued at any time without notice, and may produce inaccurate results. Use of beta features is at your sole risk.</p>
+
+    <h2 id="s47">47. Feedback and Suggestions</h2>
+    <p>Any feedback, suggestions, or ideas you provide regarding the Service ("Feedback") may be used by LoadTester without restriction, compensation, or attribution. By providing Feedback, you grant LoadTester an irrevocable, perpetual, royalty-free license to use, incorporate, and commercialize that Feedback in any manner.</p>
+
+    <h2 id="s48">48. Relationship of Parties</h2>
+    <p>Nothing in these Terms creates a partnership, joint venture, employment, agency, or franchise relationship between you and LoadTester. You are an independent party accessing a technology service.</p>
+
+    <h2 id="s49">49. Headings</h2>
+    <p>Section headings are for convenience only and shall not affect the interpretation of these Terms.</p>
+
+    <h2 id="s50">50. Language</h2>
+    <p>These Terms are written in English. To the extent any translated version conflicts with the English version, the English version shall govern.</p>
+
+    <h2 id="s51">51. Contact</h2>
+    <p>For legal notices only, contact LoadTester in writing at the registered address in Section 27. There is no support email address. The Service is designed to be self-service. Documentation is available at <a href="/docs.html">theloadtester.com/docs.html</a>.</p>
+
+    <p style="margin-top:48px;padding-top:24px;border-top:1px solid var(--border);font-size:0.82rem;color:#9ca3af;">
+      &copy; 2026 LoadTester (theloadtester.com). All rights reserved.<br>
+      These Terms of Service were last updated on April 12, 2026.
+    </p>
+  </div>
 </body>
 </html>

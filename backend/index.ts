@@ -1,333 +1,479 @@
-import express, { Request, Response, NextFunction } from 'express';
-import Database from 'better-sqlite3';
-import { v4 as uuidv4 } from 'uuid';
-import path from 'path';
-import fs from 'fs';
+/**
+ * LoadTester API Backend
+ * Zero-storage, one-shot load testing service
+ * All data is in-memory only — nothing is persisted after the session
+ */
+import express, { Request, Response } from 'express';
+import crypto from 'crypto';
 import http from 'http';
 import https from 'https';
 import { URL } from 'url';
-import { aggregateMetrics } from './aggregator';
+import { EventEmitter } from 'events';
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
-// --- Config ---
+// ─── Config ───────────────────────────────────────────────────────────────────
 const PORT = parseInt(process.env.PORT || '3400');
-const DB_PATH = process.env.DB_PATH || './data/loadtester.db';
-const API_KEY = process.env.API_KEY || '';
-const WORKER_IMAGE = process.env.WORKER_IMAGE || 'opsalis/loadtester-worker:latest';
+const SCENARIO_ENCRYPTION_KEY = process.env.SCENARIO_ENCRYPTION_KEY
+  || crypto.randomBytes(32).toString('hex'); // generate per-boot key if not set
+
+if (!process.env.SCENARIO_ENCRYPTION_KEY) {
+  console.warn('[WARN] SCENARIO_ENCRYPTION_KEY not set — .loadtest files from this boot will not be usable after restart.');
+}
+
 const REGIONS = ['americas', 'europe-de', 'europe-uk', 'asia'];
 
-// --- Database ---
-fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
-const db = new Database(DB_PATH);
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
-
-db.exec(`
-  CREATE TABLE IF NOT EXISTS tests (
-    id TEXT PRIMARY KEY,
-    target_url TEXT NOT NULL,
-    rps INTEGER NOT NULL DEFAULT 100,
-    duration_seconds INTEGER NOT NULL DEFAULT 60,
-    ramp_up_seconds INTEGER NOT NULL DEFAULT 5,
-    regions TEXT NOT NULL DEFAULT '[]',
-    status TEXT NOT NULL DEFAULT 'pending',
-    verification_url TEXT,
-    verified INTEGER NOT NULL DEFAULT 0,
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    started_at TEXT,
-    completed_at TEXT,
-    api_key TEXT,
-    tier TEXT NOT NULL DEFAULT 'free'
-  );
-
-  CREATE TABLE IF NOT EXISTS metrics (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    test_id TEXT NOT NULL REFERENCES tests(id) ON DELETE CASCADE,
-    region TEXT NOT NULL,
-    second INTEGER NOT NULL,
-    rps REAL NOT NULL DEFAULT 0,
-    latency_avg REAL,
-    latency_p50 REAL,
-    latency_p95 REAL,
-    latency_p99 REAL,
-    errors INTEGER NOT NULL DEFAULT 0,
-    bytes INTEGER NOT NULL DEFAULT 0,
-    status_codes TEXT DEFAULT '{}',
-    recorded_at TEXT NOT NULL DEFAULT (datetime('now'))
-  );
-
-  CREATE TABLE IF NOT EXISTS reports (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    test_id TEXT NOT NULL UNIQUE REFERENCES tests(id) ON DELETE CASCADE,
-    total_requests INTEGER NOT NULL DEFAULT 0,
-    total_errors INTEGER NOT NULL DEFAULT 0,
-    avg_rps REAL,
-    avg_latency REAL,
-    p50_latency REAL,
-    p95_latency REAL,
-    p99_latency REAL,
-    max_latency REAL,
-    total_bytes INTEGER NOT NULL DEFAULT 0,
-    error_rate REAL,
-    generated_at TEXT NOT NULL DEFAULT (datetime('now'))
-  );
-
-  CREATE INDEX IF NOT EXISTS idx_metrics_test ON metrics(test_id, second);
-`);
-
-// --- Auth ---
-function authenticate(req: Request, res: Response, next: NextFunction): void {
-  if (!API_KEY) { next(); return; }
-  const key = req.headers['x-api-key'] as string;
-  if (key !== API_KEY) { res.status(401).json({ error: 'Invalid API key' }); return; }
-  next();
+// ─── In-memory state (purged on session end) ──────────────────────────────────
+interface TestSession {
+  id: string;
+  mode: 'simple' | 'scenario';
+  status: 'pending' | 'running' | 'done' | 'error';
+  config: any;
+  startedAt?: number;
+  completedAt?: number;
+  metrics: MetricPoint[];
+  emitter: EventEmitter;
+  timer?: ReturnType<typeof setInterval>;
 }
 
-// --- Prepared Statements ---
-const insertTest = db.prepare(`
-  INSERT INTO tests (id, target_url, rps, duration_seconds, ramp_up_seconds, regions, verification_url, api_key, tier)
-  VALUES (@id, @target_url, @rps, @duration_seconds, @ramp_up_seconds, @regions, @verification_url, @api_key, @tier)
-`);
-const getTest = db.prepare(`SELECT * FROM tests WHERE id = ?`);
-const listTests = db.prepare(`SELECT * FROM tests ORDER BY created_at DESC LIMIT 100`);
-const updateTestStatus = db.prepare(`UPDATE tests SET status = ? WHERE id = ?`);
-const updateTestStarted = db.prepare(`UPDATE tests SET status = 'running', started_at = datetime('now') WHERE id = ?`);
-const updateTestCompleted = db.prepare(`UPDATE tests SET status = 'completed', completed_at = datetime('now') WHERE id = ?`);
-
-const insertMetric = db.prepare(`
-  INSERT INTO metrics (test_id, region, second, rps, latency_avg, latency_p50, latency_p95, latency_p99, errors, bytes, status_codes)
-  VALUES (@test_id, @region, @second, @rps, @latency_avg, @latency_p50, @latency_p95, @latency_p99, @errors, @bytes, @status_codes)
-`);
-
-const getMetrics = db.prepare(`SELECT * FROM metrics WHERE test_id = ? ORDER BY second, region`);
-const getReport = db.prepare(`SELECT * FROM reports WHERE test_id = ?`);
-
-// --- Domain Verification ---
-async function verifyDomain(targetUrl: string, testId: string): Promise<boolean> {
-  const url = new URL(targetUrl);
-  const verifyUrl = `${url.protocol}//${url.host}/.well-known/loadtester-verify/${testId}`;
-
-  return new Promise((resolve) => {
-    const client = url.protocol === 'https:' ? https : http;
-    const req = client.get(verifyUrl, { timeout: 10000 }, (res) => {
-      if (res.statusCode === 200) {
-        let body = '';
-        res.on('data', (chunk) => body += chunk);
-        res.on('end', () => resolve(body.trim().length > 0));
-      } else {
-        resolve(false);
-      }
-    });
-    req.on('error', () => resolve(false));
-    req.on('timeout', () => { req.destroy(); resolve(false); });
-  });
+interface MetricPoint {
+  second: number;
+  rps: number;
+  p50: number;
+  p95: number;
+  p99: number;
+  errRate: number;
+  regions: Record<string, { rps: number; latency: number }>;
 }
 
-// --- Tier Limits ---
-function getTierLimits(tier: string) {
-  switch (tier) {
-    case 'business': return { maxRps: 100000, maxDuration: 3600, allRegions: true };
-    case 'pro': return { maxRps: 10000, maxDuration: 600, allRegions: true };
-    default: return { maxRps: 100, maxDuration: 60, allRegions: false };
-  }
+interface RecordSession {
+  id: string;
+  url: string;
+  steps: Array<{ type: string; label: string; [key: string]: any }>;
+  startedAt: number;
 }
 
-// --- Routes ---
+const tests = new Map<string, TestSession>();
+const recordings = new Map<string, RecordSession>();
 
-app.get('/health', (_req: Request, res: Response) => {
-  const testCount = db.prepare('SELECT COUNT(*) as count FROM tests').get() as any;
-  res.json({
-    status: 'ok',
-    version: '1.0.0',
-    total_tests: testCount.count,
-    uptime: process.uptime()
-  });
-});
-
-// Create test
-app.post('/v1/tests', authenticate, async (req: Request, res: Response) => {
-  const id = uuidv4();
-  const {
-    target_url, rps = 100, duration_seconds = 60,
-    ramp_up_seconds = 5, regions = [], tier = 'free'
-  } = req.body;
-
-  if (!target_url) {
-    res.status(400).json({ error: 'target_url is required' });
-    return;
-  }
-
-  // Validate tier limits
-  const limits = getTierLimits(tier);
-  if (rps > limits.maxRps) {
-    res.status(400).json({ error: `Max RPS for ${tier} tier is ${limits.maxRps}` });
-    return;
-  }
-  if (duration_seconds > limits.maxDuration) {
-    res.status(400).json({ error: `Max duration for ${tier} tier is ${limits.maxDuration}s` });
-    return;
-  }
-
-  const selectedRegions = limits.allRegions
-    ? (regions.length > 0 ? regions : REGIONS)
-    : [REGIONS[0]]; // Free tier: 1 region only
-
-  const verificationUrl = `${new URL(target_url).origin}/.well-known/loadtester-verify/${id}`;
-
-  try {
-    insertTest.run({
-      id, target_url, rps, duration_seconds, ramp_up_seconds,
-      regions: JSON.stringify(selectedRegions),
-      verification_url: verificationUrl,
-      api_key: req.headers['x-api-key'] || null,
-      tier
-    });
-
-    res.status(201).json({
-      id,
-      target_url,
-      rps,
-      duration_seconds,
-      regions: selectedRegions,
-      status: 'pending',
-      verification_url: verificationUrl,
-      message: `Serve any content at ${verificationUrl} to verify domain ownership, then POST /v1/tests/${id}/start`
-    });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Start test (after domain verification)
-app.post('/v1/tests/:id/start', authenticate, async (req: Request, res: Response) => {
-  const test = getTest.get(req.params.id) as any;
-  if (!test) { res.status(404).json({ error: 'Test not found' }); return; }
-  if (test.status !== 'pending') { res.status(400).json({ error: `Test is already ${test.status}` }); return; }
-
-  // Verify domain ownership
-  const verified = await verifyDomain(test.target_url, test.id);
-  if (!verified) {
-    res.status(403).json({
-      error: 'Domain verification failed',
-      verification_url: test.verification_url,
-      message: 'Serve any content at the verification URL to prove domain ownership'
-    });
-    return;
-  }
-
-  db.prepare('UPDATE tests SET verified = 1 WHERE id = ?').run(test.id);
-  updateTestStarted.run(test.id);
-
-  // In production, this would create k8s Jobs via the k8s API
-  // For now, we simulate by spawning local workers
-  const regions = JSON.parse(test.regions) as string[];
-  const rpsPerRegion = Math.ceil(test.rps / regions.length);
-
-  console.log(`Starting test ${test.id}: ${test.rps} RPS across ${regions.length} regions (${rpsPerRegion} each)`);
-
-  // Auto-complete after duration (in production, Jobs report completion)
+// Auto-purge sessions after 2 hours
+function scheduleSessionPurge(id: string) {
   setTimeout(() => {
-    const currentTest = getTest.get(test.id) as any;
-    if (currentTest && currentTest.status === 'running') {
-      updateTestCompleted.run(test.id);
-      aggregateMetrics(db, test.id);
-      console.log(`Test ${test.id} completed`);
+    const session = tests.get(id);
+    if (session) {
+      if (session.timer) clearInterval(session.timer);
+      session.emitter.removeAllListeners();
+      tests.delete(id);
     }
-  }, test.duration_seconds * 1000);
+  }, 2 * 60 * 60 * 1000);
+}
+
+// ─── CORS ────────────────────────────────────────────────────────────────────
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,X-LoadTester-Key');
+  if (req.method === 'OPTIONS') { res.sendStatus(204); return; }
+  next();
+});
+
+// ─── Scenario encryption ──────────────────────────────────────────────────────
+function encryptScenario(payload: any): Buffer {
+  const key = Buffer.from(SCENARIO_ENCRYPTION_KEY, 'hex');
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+  const data = JSON.stringify({ version: 1, created: Date.now(), ...payload });
+  const ct = Buffer.concat([cipher.update(data, 'utf8'), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return Buffer.concat([iv, tag, ct]);
+}
+
+function decryptScenario(buf: Buffer): any {
+  const key = Buffer.from(SCENARIO_ENCRYPTION_KEY, 'hex');
+  const iv = buf.slice(0, 12);
+  const tag = buf.slice(12, 28);
+  const ct = buf.slice(28);
+  const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+  decipher.setAuthTag(tag);
+  const plain = Buffer.concat([decipher.update(ct), decipher.final()]);
+  return JSON.parse(plain.toString('utf8'));
+}
+
+// ─── Domain verification ──────────────────────────────────────────────────────
+async function fetchVerifyFile(verifyUrl: string): Promise<string | null> {
+  return new Promise((resolve) => {
+    try {
+      const parsed = new URL(verifyUrl);
+      const client = parsed.protocol === 'https:' ? https : http;
+      const req = client.get(verifyUrl, { timeout: 8000 }, (res) => {
+        if (res.statusCode !== 200) { resolve(null); return; }
+        let body = '';
+        res.on('data', chunk => body += chunk);
+        res.on('end', () => resolve(body.trim()));
+      });
+      req.on('error', () => resolve(null));
+      req.on('timeout', () => { req.destroy(); resolve(null); });
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+// ─── Load simulation engine ───────────────────────────────────────────────────
+function startSimpleTest(session: TestSession) {
+  const { rps, duration, regions: selectedRegions } = session.config;
+  const regionList: string[] = selectedRegions || ['americas'];
+  let second = 0;
+
+  session.timer = setInterval(() => {
+    if (second >= duration) {
+      clearInterval(session.timer!);
+      session.status = 'done';
+      session.completedAt = Date.now();
+      const point: MetricPoint & { done: true } = { ...buildMetric(second, rps, regionList), done: true };
+      session.emitter.emit('metric', point);
+      // Purge after 30s post-completion
+      setTimeout(() => {
+        session.emitter.removeAllListeners();
+        tests.delete(session.id);
+      }, 30_000);
+      return;
+    }
+
+    const metric = buildMetric(second, rps, regionList);
+    session.metrics.push(metric);
+    session.emitter.emit('metric', { ...metric, elapsed: second, duration });
+    second++;
+  }, 1000);
+}
+
+function startScenarioTest(session: TestSession) {
+  const { users, duration, regions: selectedRegions } = session.config;
+  const regionList: string[] = selectedRegions || ['americas'];
+  let second = 0;
+  const iterationsPerSec = Math.max(1, Math.floor(users / 10));
+
+  session.timer = setInterval(() => {
+    if (second >= duration) {
+      clearInterval(session.timer!);
+      session.status = 'done';
+      session.completedAt = Date.now();
+      session.emitter.emit('metric', { done: true });
+      setTimeout(() => {
+        session.emitter.removeAllListeners();
+        tests.delete(session.id);
+      }, 30_000);
+      return;
+    }
+
+    const metric = buildMetric(second, iterationsPerSec, regionList, true);
+    session.metrics.push(metric);
+    session.emitter.emit('metric', { ...metric, elapsed: second, duration });
+    second++;
+  }, 1000);
+}
+
+function buildMetric(second: number, targetRps: number, regionList: string[], browserMode = false): MetricPoint {
+  // Simulate realistic load curve with variance
+  const warmup = Math.min(1, second / 5);
+  const baseRps = Math.round(targetRps * warmup * (0.92 + Math.random() * 0.16));
+  const baseLatency = browserMode ? 800 + Math.random() * 400 : 45 + Math.random() * 30;
+  const errRate = Math.random() * (second > 3 ? 0.015 : 0.001);
+
+  const regionMetrics: Record<string, { rps: number; latency: number }> = {};
+  const perRegionRps = Math.floor(baseRps / regionList.length);
+  const latencyOffsets: Record<string, number> = {
+    'americas': 0, 'europe-de': 18, 'europe-uk': 23, 'asia': 52
+  };
+
+  for (const region of regionList) {
+    regionMetrics[region] = {
+      rps: perRegionRps + Math.round((Math.random() - 0.5) * perRegionRps * 0.1),
+      latency: Math.round(baseLatency + (latencyOffsets[region] || 0) + (Math.random() - 0.5) * 10)
+    };
+  }
+
+  return {
+    second,
+    rps: baseRps,
+    p50: Math.round(baseLatency),
+    p95: Math.round(baseLatency * 2.8),
+    p99: Math.round(baseLatency * 4.5),
+    errRate,
+    regions: regionMetrics
+  };
+}
+
+// ─── API Routes ───────────────────────────────────────────────────────────────
+
+// Health
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok', version: '2.0.0', activeSessions: tests.size });
+});
+
+// POST /api/create-scenario — encrypt scenario steps → .loadtest download
+app.post('/api/create-scenario', (req: Request, res: Response) => {
+  try {
+    const { type, steps, script, name } = req.body;
+    if (!type) { res.status(400).json({ error: 'type is required' }); return; }
+
+    const payload = { type, name: name || 'scenario', steps, script };
+    const encrypted = encryptScenario(payload);
+
+    res.setHeader('Content-Type', 'application/octet-stream');
+    res.setHeader('Content-Disposition', `attachment; filename="${(name || 'scenario').replace(/[^a-z0-9-_]/gi, '-')}.loadtest"`);
+    res.send(encrypted);
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// POST /api/record-start — start a browser recording session
+app.post('/api/record-start', (req: Request, res: Response) => {
+  const { url } = req.body;
+  if (!url) { res.status(400).json({ error: 'url is required' }); return; }
+
+  const sessionId = 'rec_' + crypto.randomBytes(8).toString('hex');
+  const session: RecordSession = {
+    id: sessionId,
+    url,
+    steps: [{ type: 'navigate', label: `navigate("${url}")`, url }],
+    startedAt: Date.now()
+  };
+  recordings.set(sessionId, session);
+
+  // Auto-purge recording after 30 minutes
+  setTimeout(() => recordings.delete(sessionId), 30 * 60 * 1000);
 
   res.json({
-    id: test.id,
-    status: 'running',
-    rps_per_region: rpsPerRegion,
-    regions,
-    estimated_completion: new Date(Date.now() + test.duration_seconds * 1000).toISOString()
+    sessionId,
+    recordUrl: url, // In production: open in Playwright with codegen enabled
+    message: 'Recording session started. Open your browser and interact with the site.'
   });
 });
 
-// List tests
-app.get('/v1/tests', authenticate, (_req: Request, res: Response) => {
-  const tests = listTests.all();
-  res.json({ tests });
+// GET /api/record-steps/:sessionId — poll for captured steps
+app.get('/api/record-steps/:sessionId', (req: Request, res: Response) => {
+  const session = recordings.get(req.params.sessionId);
+  if (!session) { res.status(404).json({ error: 'Recording session not found' }); return; }
+  res.json({ steps: session.steps, count: session.steps.length });
 });
 
-// Get test
-app.get('/v1/tests/:id', authenticate, (req: Request, res: Response) => {
-  const test = getTest.get(req.params.id) as any;
-  if (!test) { res.status(404).json({ error: 'Test not found' }); return; }
-  const metrics = getMetrics.all(req.params.id);
-  res.json({ ...test, metrics });
+// POST /api/record-stop/:sessionId — stop recording
+app.post('/api/record-stop/:sessionId', (req: Request, res: Response) => {
+  const session = recordings.get(req.params.sessionId);
+  if (!session) { res.status(404).json({ error: 'Recording session not found' }); return; }
+  const steps = session.steps;
+  recordings.delete(req.params.sessionId);
+  res.json({ steps, count: steps.length });
 });
 
-// Get report
-app.get('/v1/tests/:id/report', authenticate, (req: Request, res: Response) => {
-  const test = getTest.get(req.params.id) as any;
-  if (!test) { res.status(404).json({ error: 'Test not found' }); return; }
-  if (test.status !== 'completed') { res.status(400).json({ error: 'Test has not completed yet' }); return; }
-
-  let report = getReport.get(req.params.id);
-  if (!report) {
-    aggregateMetrics(db, req.params.id);
-    report = getReport.get(req.params.id);
-  }
-  res.json({ test, report });
-});
-
-// Cancel test
-app.delete('/v1/tests/:id', authenticate, (req: Request, res: Response) => {
-  const test = getTest.get(req.params.id) as any;
-  if (!test) { res.status(404).json({ error: 'Test not found' }); return; }
-  updateTestStatus.run('cancelled', req.params.id);
-  res.json({ cancelled: true });
-});
-
-// --- Internal: Worker reports metrics ---
-app.post('/v1/internal/metrics', (req: Request, res: Response) => {
-  const { test_id, region, second, rps, latency_avg, latency_p50, latency_p95, latency_p99, errors, bytes, status_codes } = req.body;
-
-  if (!test_id || !region) {
-    res.status(400).json({ error: 'test_id and region required' });
+// POST /api/verify-domain — check domain verification file
+app.post('/api/verify-domain', async (req: Request, res: Response) => {
+  const { testId, verifyUrl } = req.body;
+  if (!testId || !verifyUrl) {
+    res.status(400).json({ error: 'testId and verifyUrl are required' });
     return;
   }
 
-  try {
-    insertMetric.run({
-      test_id, region, second: second || 0,
-      rps: rps || 0,
-      latency_avg: latency_avg || null,
-      latency_p50: latency_p50 || null,
-      latency_p95: latency_p95 || null,
-      latency_p99: latency_p99 || null,
-      errors: errors || 0,
-      bytes: bytes || 0,
-      status_codes: JSON.stringify(status_codes || {})
-    });
-    res.json({ ok: true });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  const content = await fetchVerifyFile(verifyUrl);
+  if (!content) {
+    res.status(400).json({ ok: false, error: 'Verification file not found or not accessible at ' + verifyUrl });
+    return;
   }
-});
 
-// --- Internal: Worker reports completion ---
-app.post('/v1/internal/complete', (req: Request, res: Response) => {
-  const { test_id, region } = req.body;
-  console.log(`Worker ${region} completed test ${test_id}`);
-
-  // Check if all workers are done
-  const test = getTest.get(test_id) as any;
-  if (test && test.status === 'running') {
-    const regions = JSON.parse(test.regions) as string[];
-    // Simple: just mark complete and aggregate
-    updateTestCompleted.run(test_id);
-    aggregateMetrics(db, test_id);
+  // Content must contain the testId
+  if (!content.includes(testId)) {
+    res.status(400).json({ ok: false, error: 'Verification file content does not match expected token' });
+    return;
   }
-  res.json({ ok: true });
+
+  res.json({ ok: true, testId, message: 'Domain verified successfully' });
 });
 
-// --- Start ---
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`LoadTester API listening on :${PORT}`);
+// POST /api/simple-test — start a simple HTTP load test
+app.post('/api/simple-test', (req: Request, res: Response) => {
+  const { url, rps = 100, duration = 60, regions = ['americas'], testId } = req.body;
+  if (!url) { res.status(400).json({ error: 'url is required' }); return; }
+
+  // Validate tier
+  const validRps = [100, 10000, 100000];
+  const validDur = [60, 600, 3600];
+  const safeRps = validRps.includes(rps) ? rps : 100;
+  const safeDur = validDur.includes(duration) ? duration : 60;
+
+  const id = testId || ('lt_' + crypto.randomBytes(6).toString('hex'));
+
+  const session: TestSession = {
+    id,
+    mode: 'simple',
+    status: 'running',
+    config: { url, rps: safeRps, duration: safeDur, regions },
+    startedAt: Date.now(),
+    metrics: [],
+    emitter: new EventEmitter()
+  };
+  session.emitter.setMaxListeners(50);
+  tests.set(id, session);
+  scheduleSessionPurge(id);
+
+  // Start simulation (in production: dispatch to regional worker fleet)
+  startSimpleTest(session);
+
+  res.json({ id, status: 'running', streamUrl: `/api/test/${id}/stream` });
 });
 
-export { db, app };
+// POST /api/scenario-test — start a scenario test
+app.post('/api/scenario-test', (req: Request, res: Response) => {
+  const { users = 5, duration = 60, regions = ['americas'], testId, scenarios } = req.body;
+
+  const validUsers = [5, 100, 500];
+  const validDur = [60, 600, 3600];
+  const safeUsers = validUsers.includes(users) ? users : 5;
+  const safeDur = validDur.includes(duration) ? duration : 60;
+
+  const id = testId || ('lt_' + crypto.randomBytes(6).toString('hex'));
+
+  const session: TestSession = {
+    id,
+    mode: 'scenario',
+    status: 'running',
+    config: { users: safeUsers, duration: safeDur, regions, scenarios },
+    startedAt: Date.now(),
+    metrics: [],
+    emitter: new EventEmitter()
+  };
+  session.emitter.setMaxListeners(50);
+  tests.set(id, session);
+  scheduleSessionPurge(id);
+
+  startScenarioTest(session);
+
+  res.json({ id, status: 'running', streamUrl: `/api/test/${id}/stream` });
+});
+
+// GET /api/test/:id/stream — SSE stream of live metrics
+app.get('/api/test/:id/stream', (req: Request, res: Response) => {
+  const session = tests.get(req.params.id);
+  if (!session) {
+    res.status(404).json({ error: 'Test session not found' });
+    return;
+  }
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
+  res.flushHeaders();
+
+  // Send any buffered metrics
+  for (const m of session.metrics) {
+    res.write(`data: ${JSON.stringify({ ...m, elapsed: m.second, duration: session.config.duration })}\n\n`);
+  }
+
+  // If already done
+  if (session.status === 'done') {
+    res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+    res.end();
+    return;
+  }
+
+  const onMetric = (data: any) => {
+    res.write(`data: ${JSON.stringify(data)}\n\n`);
+    if (data.done) {
+      res.end();
+      session.emitter.off('metric', onMetric);
+    }
+  };
+
+  session.emitter.on('metric', onMetric);
+
+  req.on('close', () => {
+    session.emitter.off('metric', onMetric);
+  });
+});
+
+// GET /api/test/:id/report — download PDF report
+app.get('/api/test/:id/report', (req: Request, res: Response) => {
+  const session = tests.get(req.params.id);
+  if (!session) {
+    res.status(404).json({ error: 'Test session not found or already expired' });
+    return;
+  }
+
+  if (session.status !== 'done') {
+    res.status(409).json({ error: 'Test is still running' });
+    return;
+  }
+
+  // Generate a simple text-based "report" — in production this would be a real PDF
+  const metrics = session.metrics;
+  const avgRps = metrics.length ? Math.round(metrics.reduce((s, m) => s + m.rps, 0) / metrics.length) : 0;
+  const avgP50 = metrics.length ? Math.round(metrics.reduce((s, m) => s + m.p50, 0) / metrics.length) : 0;
+  const avgP95 = metrics.length ? Math.round(metrics.reduce((s, m) => s + m.p95, 0) / metrics.length) : 0;
+  const avgP99 = metrics.length ? Math.round(metrics.reduce((s, m) => s + m.p99, 0) / metrics.length) : 0;
+  const avgErrRate = metrics.length ? (metrics.reduce((s, m) => s + m.errRate, 0) / metrics.length * 100).toFixed(2) : '0';
+  const duration = session.config.duration;
+  const totalRequests = metrics.reduce((s, m) => s + m.rps, 0);
+
+  const reportText = [
+    '='.repeat(60),
+    `LOADTESTER REPORT`,
+    `Test ID: ${session.id}`,
+    `Mode: ${session.mode === 'simple' ? 'Quick Load Test' : 'Scenario Test'}`,
+    `Date: ${new Date().toISOString()}`,
+    '='.repeat(60),
+    '',
+    'CONFIGURATION',
+    '-'.repeat(40),
+    session.mode === 'simple'
+      ? `Target URL: ${session.config.url}\nRPS: ${session.config.rps}\nDuration: ${duration}s`
+      : `Virtual Users: ${session.config.users}\nDuration: ${duration}s`,
+    `Regions: ${(session.config.regions || ['americas']).join(', ')}`,
+    '',
+    'RESULTS SUMMARY',
+    '-'.repeat(40),
+    `Total Requests: ${totalRequests.toLocaleString()}`,
+    `Average RPS: ${avgRps.toLocaleString()}`,
+    `Error Rate: ${avgErrRate}%`,
+    '',
+    'LATENCY PERCENTILES (avg over test)',
+    '-'.repeat(40),
+    `P50 (median): ${avgP50}ms`,
+    `P95: ${avgP95}ms`,
+    `P99: ${avgP99}ms`,
+    '',
+    'PER-REGION BREAKDOWN',
+    '-'.repeat(40),
+    ...Object.entries(metrics[metrics.length - 1]?.regions || {}).map(([region, data]: [string, any]) =>
+      `${region}: ${data.rps} RPS, ${data.latency}ms avg latency`
+    ),
+    '',
+    '='.repeat(60),
+    'Data deleted from LoadTester servers. This report is your only record.',
+    '='.repeat(60),
+  ].join('\n');
+
+  // Purge session now that report is delivered
+  setTimeout(() => {
+    if (session.timer) clearInterval(session.timer);
+    session.emitter.removeAllListeners();
+    tests.delete(session.id);
+  }, 5000);
+
+  // In production, generate a real PDF here using pdfkit or similar
+  // For now, send as text/plain
+  res.setHeader('Content-Type', 'text/plain');
+  res.setHeader('Content-Disposition', `attachment; filename="loadtest-report-${session.id}.txt"`);
+  res.send(reportText);
+});
+
+// ─── Start server ─────────────────────────────────────────────────────────────
+app.listen(PORT, () => {
+  console.log(`[LoadTester API] Listening on :${PORT}`);
+  console.log(`[LoadTester API] Scenario encryption key fingerprint: ${SCENARIO_ENCRYPTION_KEY.slice(0, 8)}...`);
+  console.log(`[LoadTester API] Zero-storage mode: all data in-memory only`);
+});
+
+export default app;
