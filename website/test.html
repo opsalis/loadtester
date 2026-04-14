@@ -675,8 +675,8 @@ module.exports = async function(browser) {
     setTimeout(function() { updateSimplePrice(); syncRegions(); }, 100);
 
     function simpleNext() {
-      const url = document.getElementById('s-url').value.trim();
-      if (!url || !url.startsWith('http')) return alert('Please enter a valid URL starting with http:// or https://');
+      const url = (document.getElementById('s-url').value || '').trim();
+      if (!url || !/^https?:\/\/.+/.test(url)) return alert('Please enter a valid URL starting with http:// or https://');
       generateTestId();
       showCard('simple-config-card', 'simple-verify-card');
     }
