@@ -21,7 +21,8 @@ spec:
       serviceAccountName: loadtester-api
       containers:
       - name: api
-        image: opsalis/loadtester-api:latest
+        image: sertonenet/loadtester-api:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 3400
           name: http
@@ -30,8 +31,12 @@ spec:
           value: "3400"
         - name: DB_PATH
           value: "/app/data/loadtester.db"
+        - name: NAMESPACE
+          value: "loadtester"
         - name: WORKER_IMAGE
-          value: "opsalis/loadtester-worker:latest"
+          value: "sertonenet/loadtester-worker:latest"
+        - name: BILLING_RPC
+          value: "http://l2-rpc.opsalis-l2-demo.svc.cluster.local:8545"
         - name: API_KEY
           valueFrom:
             secretKeyRef:

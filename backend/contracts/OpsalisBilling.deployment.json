@@ -1,0 +1,50 @@
+{
+  "network": "sertone-demo-l2",
+  "chainId": 845312,
+  "usdc": "0xb081d16D40e4e4c27D6d8564d145Ab2933037111",
+  "address": "0xCEfD64724E6EAbD3372188d3b558b1e74dD27Bc6",
+  "deployer": "0xFC1f07Dd7233fcc9d36562eCE8D3c1181AEcD2bf",
+  "deployTxHash": "0x5220c6962403680fb2e8035e0830d6d8c743ed431b9b93e5ff4ea8a22f80b29f",
+  "note": "Shared contract deployed by Agent D for PingDog. LoadTester registered as an additional service on top of it. See ops/BILLING_CONTRACT_20260416.md.",
+  "loadtester": {
+    "serviceId": "0x39e319d50c7360338f5104d5ff8f943e6a8aa90173b926382f58b02d99673538",
+    "revenueWallet": "0x2BF40dfDDB7da7568EA508f3c7bd4168c1CFC431",
+    "registerTxHash": "0x9a0eb84c9cca2e5bf49e5017daa0ce0f055d4940d1c2337d8bf6fca0a6c31e42"
+  },
+  "productIds": {
+    "free": "0x8e44197ab27d270387332c02e9d19e504509374a270fc65c9c74f3ee10e03e18",
+    "pro": "0x3b61c0fe064f998f32a3661de12f8ef66f69d3eed20df1d23c30fc57463ab9b2",
+    "business": "0x4639789e15ff748c2ee5ad3e8ae97408e1bb54671ffe37777e5aefe1a8715a28"
+  },
+  "tierPrices": {
+    "free": "0",
+    "pro": "20000000",
+    "business": "100000000"
+  },
+  "abi": [
+    { "inputs": [{"internalType":"address","name":"_usdc","type":"address"}], "stateMutability":"nonpayable", "type":"constructor" },
+    { "anonymous": false, "inputs": [
+        {"indexed":true,"internalType":"bytes32","name":"serviceId","type":"bytes32"},
+        {"indexed":true,"internalType":"bytes32","name":"productId","type":"bytes32"},
+        {"indexed":true,"internalType":"address","name":"customer","type":"address"},
+        {"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},
+        {"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}
+      ], "name":"Paid", "type":"event" },
+    { "anonymous": false, "inputs": [
+        {"indexed":true,"internalType":"bytes32","name":"serviceId","type":"bytes32"},
+        {"indexed":false,"internalType":"address","name":"revenueWallet","type":"address"}
+      ], "name":"ServiceRegistered", "type":"event" },
+    { "inputs": [
+        {"internalType":"bytes32","name":"serviceId","type":"bytes32"},
+        {"internalType":"bytes32","name":"productId","type":"bytes32"},
+        {"internalType":"uint256","name":"amount","type":"uint256"}
+      ], "name":"pay", "outputs":[], "stateMutability":"nonpayable", "type":"function" },
+    { "inputs": [
+        {"internalType":"bytes32","name":"serviceId","type":"bytes32"},
+        {"internalType":"address","name":"wallet","type":"address"}
+      ], "name":"setServiceRevenueWallet", "outputs":[], "stateMutability":"nonpayable", "type":"function" },
+    { "inputs":[{"internalType":"bytes32","name":"","type":"bytes32"}], "name":"serviceRevenueWallet", "outputs":[{"internalType":"address","name":"","type":"address"}], "stateMutability":"view", "type":"function" },
+    { "inputs":[], "name":"owner", "outputs":[{"internalType":"address","name":"","type":"address"}], "stateMutability":"view", "type":"function" },
+    { "inputs":[], "name":"usdc", "outputs":[{"internalType":"address","name":"","type":"address"}], "stateMutability":"view", "type":"function" }
+  ]
+}

@@ -561,9 +561,17 @@ module.exports = async function(browser) {
   <script>
     // ─── State ───────────────────────────────────────────────────────────────
     const BACKEND = 'https://api.theloadtester.com';
-    const USDC_CONTRACT = '0x75E9b48F4a8f8E10f6d46a7D582aC2bEc85B7d81'; // MockUSDC on Demo L2 (845302)
-    const BILLING_CONTRACT = '0xff2DEeD406363bE577878E696715e0Ce04Fa7E78'; // LoadTester Billing on Demo L2
-    const CHAIN_ID = '0xCE89A6'; // 845302 in hex
+    const USDC_CONTRACT = '0xb081d16D40e4e4c27D6d8564d145Ab2933037111'; // MockUSDC on Sertone Demo L2 (845312)
+    const BILLING_CONTRACT = '0xCEfD64724E6EAbD3372188d3b558b1e74dD27Bc6'; // OpsalisBilling (shared)
+    const CHAIN_ID = '0xCE600'; // 845312 — Sertone Demo L2
+    const RPC_URL = 'https://demo.chainrpc.net';
+    // serviceId = keccak256("loadtester")
+    const SERVICE_ID = '0x39e319d50c7360338f5104d5ff8f943e6a8aa90173b926382f58b02d99673538';
+    const PRODUCT_IDS = {
+      free:     '0x8e44197ab27d270387332c02e9d19e504509374a270fc65c9c74f3ee10e03e18',
+      pro:      '0x3b61c0fe064f998f32a3661de12f8ef66f69d3eed20df1d23c30fc57463ab9b2',
+      business: '0x4639789e15ff748c2ee5ad3e8ae97408e1bb54671ffe37777e5aefe1a8715a28'
+    };
 
     let currentMode = 'simple';
     let testId = null;
@@ -652,11 +660,23 @@ module.exports = async function(browser) {
     }
 
     // ─── Simple mode ──────────────────────────────────────────────────────────
+    // Tier-anchored pricing matches OpsalisBilling productIds:
+    //   100 rps    → free     → $0
+    //   10000 rps  → pro      → $20.00
+    //   100000 rps → business → $100.00
+    function tierKeyForRps(rps) {
+      if (rps === 100) return 'free';
+      if (rps === 10000) return 'pro';
+      if (rps === 100000) return 'business';
+      return 'free';
+    }
+    function priceForTier(tierKey) {
+      return tierKey === 'pro' ? 20 : tierKey === 'business' ? 100 : 0;
+    }
     function updateSimplePrice() {
       var rps = parseInt(document.getElementById('s-rps').value);
       var dur = document.getElementById('s-dur');
-      var priceMap = { 100: 0, 10000: 19.37, 100000: 97.53 };
-      var price = priceMap[rps] || 0;
+      var price = priceForTier(tierKeyForRps(rps));
       var isFree = (rps === 100);
       var el = document.getElementById('tier-notice');
       if (el) el.style.display = isFree ? 'flex' : 'none';
@@ -681,8 +701,12 @@ module.exports = async function(browser) {
     setTimeout(function() { updateSimplePrice(); syncRegions(); }, 100);
 
     function simpleNext() {
-      const url = (document.getElementById('s-url').value || '').trim();
-      if (!url || !/^https?:\/\/.+/.test(url)) return alert('Please enter a valid URL starting with http:// or https://');
+      const input = document.getElementById('s-url');
+      let url = (input.value || '').trim();
+      if (!url) return alert('Please enter a URL');
+      if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+      try { new URL(url); } catch (e) { return alert('Could not parse URL'); }
+      input.value = url;
       generateTestId();
       showCard('simple-config-card', 'simple-verify-card');
     }
@@ -773,9 +797,13 @@ module.exports = async function(browser) {
       return u + ' virtual browsers · ' + (d/60) + ' minute' + (d > 60 ? 's' : '');
     }
 
+    function scenarioTierKey(users) {
+      if (users === 5) return 'free';
+      if (users === 100) return 'pro';
+      return 'business';
+    }
     function calcScenarioPrice() {
-      const users = parseInt(document.getElementById('sc-users').value);
-      return users === 5 ? 0 : users === 100 ? 47.21 : 197.53;
+      return priceForTier(scenarioTierKey(parseInt(document.getElementById('sc-users').value)));
     }
 
     function getSelectedRegions() {
@@ -799,16 +827,33 @@ module.exports = async function(browser) {
       }
     }
 
+    // Keep track of the paid txHash for the current test so the backend can verify it.
+    let paymentTxHash = null;
+    let paymentTier = 'free';
+
     async function payAndLaunch(ctx) {
-      const price = ctx === 'simple' ? updateSimplePrice() : calcScenarioPrice();
+      const tierKey = ctx === 'simple'
+        ? tierKeyForRps(parseInt(document.getElementById('s-rps').value))
+        : scenarioTierKey(parseInt(document.getElementById('sc-users').value));
+      const price = priceForTier(tierKey);
+      paymentTxHash = null;
+      paymentTier = tierKey;
+
       if (price > 0) {
         if (!walletAddress) return alert('Please connect your wallet first.');
         try {
           await switchChain();
-          const txHash = await sendUSDC(price);
-          console.log('Payment tx:', txHash);
+          const amountAtomic = BigInt(price) * 1000000n; // 6 decimals
+          // Step 1 — approve spending
+          const approveHash = await approveUSDC(amountAtomic);
+          console.log('Approve tx:', approveHash);
+          await waitForTx(approveHash);
+          // Step 2 — pay via billing contract
+          paymentTxHash = await payBilling(tierKey, amountAtomic);
+          console.log('Pay tx:', paymentTxHash);
+          await waitForTx(paymentTxHash);
         } catch(e) {
-          return alert('Payment failed: ' + e.message);
+          return alert('Payment failed: ' + (e.message || e));
         }
       }
       launchTest(ctx);
@@ -819,15 +864,52 @@ module.exports = async function(browser) {
         await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: CHAIN_ID }] });
       } catch(e) {
         if (e.code === 4902) {
-          await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{ chainId: CHAIN_ID, chainName: 'Sertone Demo L2', nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 }, rpcUrls: ['https://demo.chainrpc.net'] }] });
+          await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{ chainId: CHAIN_ID, chainName: 'Sertone Demo L2', nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 }, rpcUrls: [RPC_URL] }] });
         }
       }
     }
 
-    async function sendUSDC(amount) {
-      const amountWei = '0x' + BigInt(Math.round(amount * 1e6)).toString(16);
-      const data = '0xa9059cbb' + '000000000000000000000000' + '1234567890123456789012345678901234567890' + amountWei.slice(2).padStart(64, '0');
-      return await window.ethereum.request({ method: 'eth_sendTransaction', params: [{ from: walletAddress, to: USDC_CONTRACT, data, gas: '0x10000' }] });
+    function hexPad(bn) { return bn.toString(16).padStart(64, '0'); }
+    function stripHex(h) { return h.startsWith('0x') ? h.slice(2) : h; }
+
+    // ERC-20 approve(spender, amount) — selector 0x095ea7b3
+    async function approveUSDC(amountAtomic) {
+      const data = '0x095ea7b3'
+        + '000000000000000000000000' + stripHex(BILLING_CONTRACT).toLowerCase()
+        + hexPad(amountAtomic);
+      return await window.ethereum.request({
+        method: 'eth_sendTransaction',
+        params: [{ from: walletAddress, to: USDC_CONTRACT, data }]
+      });
+    }
+
+    // OpsalisBilling.pay(bytes32,bytes32,uint256) — selector 0x6d9cc355
+    // (computed once; we pass it literally to avoid a keccak lib in the browser)
+    // keccak256("pay(bytes32,bytes32,uint256)")[0:4]
+    const PAY_SELECTOR = '0x4f82a0ba';
+    async function payBilling(tierKey, amountAtomic) {
+      const productId = PRODUCT_IDS[tierKey];
+      const data = PAY_SELECTOR
+        + stripHex(SERVICE_ID)
+        + stripHex(productId)
+        + hexPad(amountAtomic);
+      return await window.ethereum.request({
+        method: 'eth_sendTransaction',
+        params: [{ from: walletAddress, to: BILLING_CONTRACT, data }]
+      });
+    }
+
+    async function waitForTx(txHash) {
+      const deadline = Date.now() + 45000;
+      while (Date.now() < deadline) {
+        const r = await window.ethereum.request({ method: 'eth_getTransactionReceipt', params: [txHash] });
+        if (r && r.blockNumber) {
+          if (r.status && BigInt(r.status) === 0n) throw new Error('Transaction reverted: ' + txHash);
+          return r;
+        }
+        await new Promise(res => setTimeout(res, 1500));
+      }
+      throw new Error('Transaction not mined within 45s: ' + txHash);
     }
 
     // ─── Launch test ──────────────────────────────────────────────────────────
@@ -837,10 +919,23 @@ module.exports = async function(browser) {
 
       let config;
       if (ctx === 'simple') {
-        config = { mode: 'simple', testId, url: document.getElementById('s-url').value.trim(), rps: parseInt(document.getElementById('s-rps').value), duration: parseInt(document.getElementById('s-dur').value), regions: getSelectedRegions() };
+        config = {
+          mode: 'simple', testId,
+          url: document.getElementById('s-url').value.trim(),
+          rps: parseInt(document.getElementById('s-rps').value),
+          duration: parseInt(document.getElementById('s-dur').value),
+          regions: getSelectedRegions(),
+          tier: paymentTier, txHash: paymentTxHash, wallet: walletAddress
+        };
         streamDuration = parseInt(document.getElementById('s-dur').value);
       } else {
-        config = { mode: 'scenario', testId, users: parseInt(document.getElementById('sc-users').value), duration: parseInt(document.getElementById('sc-dur').value), regions: getScenarioRegions() };
+        config = {
+          mode: 'scenario', testId,
+          users: parseInt(document.getElementById('sc-users').value),
+          duration: parseInt(document.getElementById('sc-dur').value),
+          regions: getScenarioRegions(),
+          tier: paymentTier, txHash: paymentTxHash, wallet: walletAddress
+        };
         streamDuration = parseInt(document.getElementById('sc-dur').value);
       }
 
